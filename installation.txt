@@ -1,0 +1,74 @@
+download xampp control panel:
+https://sourceforge.net/projects/xampp/files/XAMPP%20Windows/8.1.25/xampp-windows-x64-8.1.25-0-VS16-installer.exe/download
+
+downlaod nodejs:
+https://nodejs.org/dist/v18.17.1/node-v18.17.1-x64.msi
+
+downlaod Anaconda: 
+https://docs.anaconda.com/free/anaconda/install/windows/
+
+2. Create a New Anaconda Environment: Open Anaconda Prompt and create a new environment with Python 3.8.12 named "loc8_ml".
+   conda create --name loc8_ml python=3.8.12
+
+3. Activate the Environment: Activate the newly created environment.
+   conda activate loc8_ml
+
+4. Navigate to Your Project Directory: Use the command line to navigate to the directory where your ByteTrack project folder is located.
+
+5. Navigate to ByteTrack Directory: Move into the ByteTrack directory within your project folder.
+   cd ByteTrack
+
+6. Install Python Dependencies: Install the Python dependencies listed in the requirements.txt file.
+   pip install numpy==1.23.5
+   pip install -r requirements.txt
+   pip install cython
+   pip install git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI
+   pip install cython_bbox
+
+7. Setup ByteTrack: Run the setup script for ByteTrack.
+   python setup.py develop
+
+8. Set Working Directory: Move back to the root directory of your project.
+   cd ..
+
+9. Install Requirements: Install the Python requirements specified in requirements.txt.
+    pip install -r requirements.txt
+
+10. Run Flask Application: Start the Flask application by executing the run.py script.
+    python run.py
+
+=======================================DB Setup=====================================================
+
+1. Start XAMPP: Open XAMPP Control Panel and start the Apache and MySQL services.
+
+2. Access phpMyAdmin: Open your web browser and go to http://localhost/phpmyadmin/.
+
+3. Login to phpMyAdmin
+
+4. Create a Database: create a database by clicking on "New" in the left sidebar, enter a name "loc8" and click "Create".
+
+5. Import SQL File: Select the database from the left sidebar, go to the "Import" tab, click "Choose File", select the "loc8.sql" file, and click "Open".
+
+6. Import Settings: Leave the default settings or adjust them as needed, then click "Go" to start the import process.
+
+7. Wait for Import to Complete: Wait for the import process to finish. phpMyAdmin will display a message once it's complete.
+
+8. Verify Data: After the import, verify that the data has been imported correctly by browsing the tables in your database.
+
+
+==============================frontend=================================================================
+
+
+2. Navigate to Frontend Directory: Open your command line interface (CLI) and navigate to the directory where your frontend code files are located.
+
+3. Install Dependencies: install the required dependencies by running:
+   npm install
+
+   This command will install all the dependencies listed in the package.json file.
+
+4. Start the Development Server: Once the dependencies are installed, you can start the development server by running:
+   npm start
+
+   This command will start the development server and open your default web browser to view your frontend application.
+
+
