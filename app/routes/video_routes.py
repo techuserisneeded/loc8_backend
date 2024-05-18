@@ -10,6 +10,8 @@ from app.constants.roles import roles
 from app import socketio
 
 from app.utils.video_helpers import get_coordinates_from_video, compress_video
+from app.libs.boto3 import upload_video_to_s3
+
 
 video_bp = Blueprint('videos', __name__)
 
@@ -134,11 +136,12 @@ def upload(current_user):
 
     # socketio.emit('compress_progress', {'percentage': -1})
 
-    # compress_video(output_file_path, compressed_file_path)
+    compress_video(output_file_path, compressed_file_path)
+    s3_file_url = upload_video_to_s3(output_file_path, comp_filename)
 
     # socketio.emit('compress_progress', {'percentage': 100})
 
-    video_id = insert_video_data(output_file_path, filename, zone_id, state_id, city_id, current_user['id'])
+    video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)
 
     # video_id = insert_video_data(compressed_file_path, comp_filename, zone_id, state_id, city_id, current_user['id'])
@@ -160,7 +163,7 @@ def upload(current_user):
     video_details = query_db(video_q, (video_id,), True)
 
     os.remove(dest)
-    # os.remove(output_file_path)
+    os.remove(output_file_path)
 
     return jsonify({"billboards":  billboards, "video_details": video_details}), 200
     # return jsonify({"billboards":  "", "video_details": ""}), 200

@@ -30,16 +30,13 @@ services:
     container_name: flask_app
     ports:
       - "5000:5000"
-    environment:
-      - DB_HOST=mysql
-      - DB_USER=admin
-      - DB_PASSWORD=password
-      - DB_NAME=loc8_ml
+    env_file:
+      - .env
     depends_on:
       - mysql
-    volumes:
-      - ./app/uploads:/app/app/uploads
-      - ./instance:/app/instance
+    # volumes:
+    #   - ./app/uploads:/app/app/uploads
+    #   - ./instance:/app/instance
 
 volumes:
   mysql_data:
