@@ -264,6 +264,8 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     else:
         print(f"Temporary file {temp_output_path} created successfully.")
 
+    progress_callback(50)
+
     # Use ffmpeg to re-encode the video with H.264 codec
     ffmpeg_command = [
         'ffmpeg', '-i', temp_output_path, '-vcodec', 'libx264', '-crf', '23', '-preset', 'medium',
@@ -273,6 +275,7 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
     # Clean up the temporary file
     os.remove(temp_output_path)
+    progress_callback(100)
 
     # After processing all frames, calculate the duration of visibility and distance to center for each billboard
     visibility_durations = {}
