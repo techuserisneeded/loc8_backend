@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file
+from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file, redirect
 from app.utils.helpers import token_required
 from config.config import AppConfig
 from werkzeug.utils import secure_filename
@@ -10,7 +10,7 @@ from app.constants.roles import roles
 from app import socketio
 
 from app.utils.video_helpers import get_coordinates_from_video, compress_video
-from app.libs.boto3 import upload_video_to_s3
+from app.libs.boto3 import upload_video_to_s3, get_presigned_url
 
 
 video_bp = Blueprint('videos', __name__)
@@ -28,12 +28,18 @@ def handle_disconnect():
 @video_bp.route('/uploads/<filename>')
 def stream_video(filename):
 
-    UPLOAD_FOLDER = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance'))
-    video_path = os.path.join(UPLOAD_FOLDER, filename+".mp4")
-    print(video_path)
-    if not os.path.isfile(video_path):  # Prevent unauthorized access
+    video_q = 'SELECT * FROM videofiles WHERE filename=%s'
+    video_details = query_db(video_q, (filename,))
+
+    if not video_details:
         return abort(401)
-    return send_file(video_path, mimetype='video/mp4', as_attachment=False) 
+    
+    file_url = get_presigned_url(video_details[0]['filename'])
+
+    if file_url:
+        return redirect(file_url)
+    else:
+        return abort(500)
 
 
 @video_bp.route('/', methods=['GET',])
