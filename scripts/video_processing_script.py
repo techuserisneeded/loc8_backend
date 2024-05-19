@@ -11,6 +11,7 @@ from tqdm import tqdm
 import numpy as np
 import locale
 import subprocess
+import uuid
 
 
 def getpreferredencoding(do_setlocale = True):
@@ -181,7 +182,7 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
     # Use MJPG codec to write initial video, will re-encode to H.264 later
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    temp_output_path = 'temp_output.avi'  # Temporary file path
+    temp_output_path = str(uuid.uuid4()) + 'temp_output.avi'  # Temporary file path
     output_video = cv2.VideoWriter(temp_output_path, fourcc, video_info.fps, (video_info.width, video_info.height))
 
     # Check if the video writer is successfully opened

@@ -126,7 +126,7 @@ def upload(current_user):
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
 
-    dest = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, secure_filename(video_file.filename)))
+    dest = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, secure_filename(generate_uuid() + video_file.filename)))
     unique_id = generate_uuid()
     filename = secure_filename("temp_" + unique_id + ".mp4")
     output_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
