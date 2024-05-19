@@ -84,6 +84,9 @@ def get_all_videos(current_user):
 
     coordinates_by_video = {};
 
+    if not video_details:
+        video_details = []
+
     for billboard_details in video_details:
 
         video_id = billboard_details['video_id']
