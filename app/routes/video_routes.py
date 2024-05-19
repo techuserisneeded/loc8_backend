@@ -134,20 +134,20 @@ def upload(current_user):
     video_file.save(dest)
 
     def progress_callback(progress_percentage):
-        socketio.emit('processing_progress', {'percentage': progress_percentage})
+        socketio.emit('processing_progress', {'percentage': progress_percentage}, room=current_user['id'])
 
     def progress_callback_s3(progress_percentage):
-        socketio.emit('saving_processed_video', {'percentage': progress_percentage})
+        socketio.emit('saving_processed_video', {'percentage': progress_percentage}, room=current_user['id'])
 
     vcd = video_processing(dest, output_file_path, progress_callback)
     vcd2 = str(vcd)
     vcd3 = vcd2[0:2]
 
-    socketio.emit('compress_progress', {'percentage': -1})
+    socketio.emit('compress_progress', {'percentage': -1}, room=current_user['id'])
 
     compress_video(output_file_path, compressed_file_path)
 
-    socketio.emit('compress_progress', {'percentage': 100})
+    socketio.emit('compress_progress', {'percentage': 100}, room=current_user['id'])
 
     s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
 
