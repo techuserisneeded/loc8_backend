@@ -117,31 +117,35 @@ def upload(current_user):
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
 
-    dest = os.path.join(AppConfig.UPLOAD_FOLDER, secure_filename(video_file.filename))
+    dest = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, secure_filename(video_file.filename)))
     unique_id = generate_uuid()
     filename = secure_filename("temp_" + unique_id + ".mp4")
-    output_file_path = os.path.join(TARGET_VIDEO_PATH, filename)
+    output_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
 
     comp_filename = secure_filename(unique_id + ".mp4")
-    compressed_file_path = os.path.join(TARGET_VIDEO_PATH, comp_filename)
+    compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, comp_filename))
 
     video_file.save(dest)
 
     def progress_callback(progress_percentage):
         socketio.emit('processing_progress', {'percentage': progress_percentage})
 
+    def progress_callback_s3(progress_percentage):
+        socketio.emit('saving_processed_video', {'percentage': progress_percentage})
+
     vcd = video_processing(dest, output_file_path, progress_callback)
     vcd2 = str(vcd)
     vcd3 = vcd2[0:2]
 
-    # socketio.emit('compress_progress', {'percentage': -1})
+    socketio.emit('compress_progress', {'percentage': -1})
 
     compress_video(output_file_path, compressed_file_path)
-    s3_file_url = upload_video_to_s3(output_file_path, comp_filename)
 
-    # socketio.emit('compress_progress', {'percentage': 100})
+    socketio.emit('compress_progress', {'percentage': 100})
 
-    video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
+    s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
+
+    video_id = insert_video_data(s3_file_url, comp_filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)
 
     # video_id = insert_video_data(compressed_file_path, comp_filename, zone_id, state_id, city_id, current_user['id'])
@@ -164,6 +168,7 @@ def upload(current_user):
 
     os.remove(dest)
     os.remove(output_file_path)
+    os.remove(compressed_file_path)
 
     return jsonify({"billboards":  billboards, "video_details": video_details}), 200
     # return jsonify({"billboards":  "", "video_details": ""}), 200

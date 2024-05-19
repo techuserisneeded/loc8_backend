@@ -1,5 +1,5 @@
 # Use the official Python image
-FROM python:3.8
+FROM python:3.8-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -10,12 +10,30 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies
 RUN apt-get update && apt-get install -y \
+    build-essential \
     cmake \
     git \
-    libgl1-mesa-glx
+    wget \
+    unzip \
+    yasm \
+    pkg-config \
+    libgl1-mesa-glx \
+    libswscale-dev \
+    libtbb-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libtiff-dev \
+    libavformat-dev \
+    libpq-dev \
+    libx264-dev \
+    libv4l-dev \
+    libxvidcore-dev \
+    ffmpeg \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
+RUN pip install opencv-python-headless
 RUN pip install protobuf==3.20.2
 
 # Clone ByteTrack repository

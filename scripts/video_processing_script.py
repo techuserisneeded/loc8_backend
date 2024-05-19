@@ -10,6 +10,8 @@ import cv2
 from tqdm import tqdm
 import numpy as np
 import locale
+import subprocess
+
 
 def getpreferredencoding(do_setlocale = True):
     return "UTF-8"
@@ -175,12 +177,16 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     byte_tracker = BYTETracker(BYTETrackerArgs())
     video_info = VideoInfo.from_video_path(File)
     generator = get_video_frames_generator(File)
-    # box_annotator = BoxAnnotator(color=ColorPalette.DEFAULT, thickness=4, text_thickness=4, text_scale=2)
     line_annotator = LineCounterAnnotator(thickness=4, text_thickness=4, text_scale=2)
 
-    # Create VideoWriter object to save the modified video
-    fourcc = cv2.VideoWriter_fourcc(*'H264')
-    output_video = cv2.VideoWriter(TARGET_VIDEO_PATH, fourcc, video_info.fps, (video_info.width, video_info.height))
+    # Use MJPG codec to write initial video, will re-encode to H.264 later
+    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    temp_output_path = 'temp_output.avi'  # Temporary file path
+    output_video = cv2.VideoWriter(temp_output_path, fourcc, video_info.fps, (video_info.width, video_info.height))
+
+    # Check if the video writer is successfully opened
+    if not output_video.isOpened():
+        raise Exception(f"Could not open video writer for {temp_output_path}")
 
     # Dictionary to store the start frame and end frame of each detected billboard
     billboard_frames = {}
@@ -206,52 +212,67 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
         mask = np.array([tracker_id is not None for tracker_id in detections.tracker_id], dtype=bool)
         detections.filter(mask=mask, inplace=True)
 
-
         for box, tracker_id, confidence in zip(detections.xyxy, detections.tracker_id, detections.confidence):
+
             if tracker_id not in billboard_frames:
-                # If the billboard is detected for the first time, record the start frame
                 billboard_frames[tracker_id] = {'start_frame': frame_idx, 'end_frame': None, 'center': None, 'areas': [], 'confidences': []}
                 billboard_regions[tracker_id] = {"Central":0,"Near P":0,"Mid P":0,"Far P":0, "Central Dist" : 0, "Near P Dist" : 0, "Mid P Dist":0, "Far P Dist":0}
             else:
-                # If the billboard is already being tracked, update the end frame
                 billboard_frames[tracker_id]['end_frame'] = frame_idx
-            # Calculate center coordinates of the billboard
+            
             center_x = (box[0] + box[2]) / 2
             center_y = (box[1] + box[3]) / 2
             billboard_frames[tracker_id]['center'] = (center_x, center_y)
-            # Draw bounding box around the billboard
-            draw_rectangle(frame, frame.shape[1],frame.shape[0])
-            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0,0,255), 3)
-
-            # Display confidence score as label
+            
+            draw_rectangle(frame, frame.shape[1], frame.shape[0])
+            cv2.rectangle(frame, (int(box[0]), int(box[1])), (int(box[2]), int(box[3])), (0, 0, 255), 3)
+            
             area = calculate_bbox_area(box, frame.shape[1], frame.shape[0])
             billboard_frames[tracker_id]['areas'].append(area)
             billboard_frames[tracker_id]['confidences'].append(confidence)
-            region = get_region(box,frame.shape[1],frame.shape[0])
+            region = get_region(box, frame.shape[1], frame.shape[0])
             region_area = region + " Dist"
-            billboard_regions[tracker_id][region]+=1
-            x1,y1,x2,y2 = box
-            bill_centre = [int((x1+x2)/2),int((y1+y2)/2)]
-            centre_img = [frame.shape[1],frame.shape[0]]
-
-            billboard_regions[tracker_id][region_area]+= euclidean_distance(bill_centre,centre_img)
+            billboard_regions[tracker_id][region] += 1
+            x1, y1, x2, y2 = box
+            bill_centre = [int((x1 + x2) / 2), int((y1 + y2) / 2)]
+            centre_img = [frame.shape[1], frame.shape[0]]
+            billboard_regions[tracker_id][region_area] += euclidean_distance(bill_centre, centre_img)
+            
             label = f"ID:{tracker_id}"
             label1 = f"{confidence:.2f}"
-            label2 = f"{calculate_bbox_area(box, frame.shape[1],frame.shape[0]):.3f}%"
-            label3 = f"{get_region(box,frame.shape[1],frame.shape[0])}"
-            w0,h0 = write_text(frame, label, (int(box[0]), int(box[1]) - 10 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0,255,255))
-            w,h = write_text(frame, label1, (int(box[0]), int(box[1])+ h0 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0,255,255))
-            w1,h1 = write_text(frame, label3, (int(box[0]), int(box[1]) + h + h0 + 10 + y_thres), cv2.FONT_ITALIC,1.1, (255, 0,0), 3, (0,255,255))
-            write_text(frame, label2, (int(box[0]), int(box[1])+ h + h0 +  h1+ 20 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0,0), 3, (0,255,255))
+            label2 = f"{calculate_bbox_area(box, frame.shape[1], frame.shape[0]):.3f}%"
+            label3 = f"{get_region(box, frame.shape[1], frame.shape[0])}"
+            w0, h0 = write_text(frame, label, (int(box[0]), int(box[1]) - 10 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
+            w, h = write_text(frame, label1, (int(box[0]), int(box[1]) + h0 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
+            w1, h1 = write_text(frame, label3, (int(box[0]), int(box[1]) + h + h0 + 10 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
+            write_text(frame, label2, (int(box[0]), int(box[1]) + h + h0 + h1 + 20 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
+
+        
         # Write the modified frame to the output video
         output_video.write(frame)
 
-        # report the percentage
+        # Report the percentage
         progress_percentage = int((frame_idx + 1) / total_frames * 100)
         progress_callback(progress_percentage)
 
     # Release the VideoWriter object
     output_video.release()
+
+    # Check if the temporary file was created and is playable
+    if not os.path.exists(temp_output_path):
+        raise Exception(f"Temporary file {temp_output_path} was not created.")
+    else:
+        print(f"Temporary file {temp_output_path} created successfully.")
+
+    # Use ffmpeg to re-encode the video with H.264 codec
+    ffmpeg_command = [
+        'ffmpeg', '-i', temp_output_path, '-vcodec', 'libx264', '-crf', '23', '-preset', 'medium',
+        '-pix_fmt', 'yuv420p', TARGET_VIDEO_PATH
+    ]
+    subprocess.run(ffmpeg_command, check=True)
+
+    # Clean up the temporary file
+    os.remove(temp_output_path)
 
     # After processing all frames, calculate the duration of visibility and distance to center for each billboard
     visibility_durations = {}
@@ -269,7 +290,6 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
         else:
             average_confidence[tracker_id] = 0
 
-
         if areas:
             average_area = sum(areas) / len(areas)
             average_areas[tracker_id] = average_area
@@ -279,18 +299,19 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
             image_center = (video_info.width / 2, video_info.height / 2)
             distance_to_center = euclidean_distance(center, image_center)
 
-            if (billboard_regions[tracker_id]['Central'])!=0:
-              billboard_regions[tracker_id]['Central Dist'] = billboard_regions[tracker_id]['Central Dist']/billboard_regions[tracker_id]['Central']
-              billboard_regions[tracker_id]['Central Dist'] = (billboard_regions[tracker_id]['Central Dist']*100/math.sqrt(frame.shape[1]*frame.shape[1] + frame.shape[0]*frame.shape[0]))
-            if (billboard_regions[tracker_id]['Near P'])!=0:
-              billboard_regions[tracker_id]['Near P Dist'] = billboard_regions[tracker_id]['Near P Dist']/billboard_regions[tracker_id]['Near P']
-              billboard_regions[tracker_id]['Near P Dist'] = (billboard_regions[tracker_id]['Near P Dist']*100/math.sqrt(frame.shape[1]*frame.shape[1] + frame.shape[0]*frame.shape[0]))
-            if (billboard_regions[tracker_id]['Mid P'])!=0:
-              billboard_regions[tracker_id]['Mid P Dist'] = billboard_regions[tracker_id]['Mid P Dist']/billboard_regions[tracker_id]['Mid P']
-              billboard_regions[tracker_id]['Mid P Dist'] = (billboard_regions[tracker_id]['Mid P Dist']*100/math.sqrt(frame.shape[1]*frame.shape[1] + frame.shape[0]*frame.shape[0]))
-            if (billboard_regions[tracker_id]['Far P'])!=0:
-              billboard_regions[tracker_id]['Far P Dist'] = billboard_regions[tracker_id]['Far P Dist']/billboard_regions[tracker_id]['Far P']
-              billboard_regions[tracker_id]['Far P Dist'] = (billboard_regions[tracker_id]['Far P Dist']*100/math.sqrt(frame.shape[1]*frame.shape[1] + frame.shape[0]*frame.shape[0]))
+            if billboard_regions[tracker_id]['Central'] != 0:
+                billboard_regions[tracker_id]['Central Dist'] = billboard_regions[tracker_id]['Central Dist'] / billboard_regions[tracker_id]['Central']
+                billboard_regions[tracker_id]['Central Dist'] = (billboard_regions[tracker_id]['Central Dist'] * 100 / math.sqrt(frame.shape[1] * frame.shape[1] + frame.shape[0] * frame.shape[0]))
+            if billboard_regions[tracker_id]['Near P'] != 0:
+                billboard_regions[tracker_id]['Near P Dist'] = billboard_regions[tracker_id]['Near P Dist'] / billboard_regions[tracker_id]['Near P']
+                billboard_regions[tracker_id]['Near P Dist'] = (billboard_regions[tracker_id]['Near P Dist'] * 100 / math.sqrt(frame.shape[1] * frame.shape[1] + frame.shape[0] * frame.shape[0]))
+            if billboard_regions[tracker_id]['Mid P'] != 0:
+                billboard_regions[tracker_id]['Mid P Dist'] = billboard_regions[tracker_id]['Mid P Dist'] / billboard_regions[tracker_id]['Mid P']
+                billboard_regions[tracker_id]['Mid P Dist'] = (billboard_regions[tracker_id]['Mid P Dist'] * 100 / math.sqrt(frame.shape[1] * frame.shape[1] + frame.shape[0] * frame.shape[0]))
+            if billboard_regions[tracker_id]['Far P'] != 0:
+                billboard_regions[tracker_id]['Far P Dist'] = billboard_regions[tracker_id]['Far P Dist'] / billboard_regions[tracker_id]['Far P']
+                billboard_regions[tracker_id]['Far P Dist'] = (billboard_regions[tracker_id]['Far P Dist'] * 100 / math.sqrt(frame.shape[1] * frame.shape[1] + frame.shape[0] * frame.shape[0]))
+
             billboard_regions[tracker_id]['Central'] = billboard_regions[tracker_id]['Central']/video_info.fps
             billboard_regions[tracker_id]['Near P'] = billboard_regions[tracker_id]['Near P']/video_info.fps
             billboard_regions[tracker_id]['Mid P'] = billboard_regions[tracker_id]['Mid P']/video_info.fps
@@ -303,9 +324,8 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
                 'Average Areas': average_areas[tracker_id],
                 'Confidence': average_confidence[tracker_id]
             }
-            # print(video_info.fps)
+            
     return visibility_durations
-
 
 
 def video_processing(dest, output_file_path=f"./instance/BillBoardDetectionandCounting.mp4", progress_callback=None):
