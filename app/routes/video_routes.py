@@ -1,5 +1,6 @@
 import os
 from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file, redirect
+from flask_socketio import leave_room, join_room
 from app.utils.helpers import token_required
 from config.config import AppConfig
 from werkzeug.utils import secure_filename
@@ -24,6 +25,18 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     print('Client disconnected')
+
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    join_room(room)
+    socketio.emit('message', {'msg': f'Joined room: {room}'}, room=room)
+
+@socketio.on('leave')
+def on_leave(data):
+    room = data['room']
+    leave_room(room)
+    socketio.send(f'has left the room.', room=room)
 
 @video_bp.route('/uploads/<filename>')
 def stream_video(filename):
@@ -122,6 +135,7 @@ def upload(current_user):
     zone_id = request.form['zone_id']
     state_id = request.form['state_id']
     city_id = request.form['city_id']
+    room_id = request.form['room_id']
 
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
@@ -137,20 +151,20 @@ def upload(current_user):
     video_file.save(dest)
 
     def progress_callback(progress_percentage):
-        socketio.emit('processing_progress', {'percentage': progress_percentage}, room=current_user['id'])
+        socketio.emit('processing_progress', {'percentage': progress_percentage}, room=room_id)
 
     def progress_callback_s3(progress_percentage):
-        socketio.emit('saving_processed_video', {'percentage': progress_percentage}, room=current_user['id'])
+        socketio.emit('saving_processed_video', {'percentage': progress_percentage}, room=room_id)
 
     vcd = video_processing(dest, output_file_path, progress_callback)
     vcd2 = str(vcd)
     vcd3 = vcd2[0:2]
 
-    socketio.emit('compress_progress', {'percentage': -1}, room=current_user['id'])
+    socketio.emit('compress_progress', {'percentage': -1}, room=room_id)
 
     compress_video(output_file_path, compressed_file_path)
 
-    socketio.emit('compress_progress', {'percentage': 100}, room=current_user['id'])
+    socketio.emit('compress_progress', {'percentage': 100}, room=room_id)
 
     s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
 
@@ -253,7 +267,7 @@ def merge_billborads(current_user):
             created_by_user_id
         FROM billboards
         WHERE id IN ({','.join(['%s']*len(billboard_ids))})
-        GROUP BY video_id
+        GROUP BY video_id, created_by_user_id
     """
 
     query_db(query_merge_sum_average, (new_billboard_id, *billboard_ids), False, True)
