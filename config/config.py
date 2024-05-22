@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 FLASK_ENV = os.getenv('FLASK_ENV')
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -14,6 +17,8 @@ if FLASK_ENV == 'production':
 
 class AppConfig:
     DEBUG = DEBUG
+    TESTING = False
+    FLASK_ENV = FLASK_ENV
     SECRET_KEY = SECRET_KEY
     MYSQL_HOST = MYSQL_HOST
     MYSQL_USER =  MYSQL_USER

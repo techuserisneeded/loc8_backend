@@ -1,6 +1,6 @@
+from config.config import AppConfig
 from flask import Flask
 from flask_cors import CORS
-from config.config import AppConfig
 from app.utils.db_helper import init_db
 from flask_socketio import SocketIO
 

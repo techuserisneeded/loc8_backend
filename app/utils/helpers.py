@@ -4,6 +4,7 @@ from functools import wraps
 from flask import request, jsonify, current_app
 from bcrypt import hashpw, gensalt
 import uuid
+import os
 
 from app.constants.roles import roles
 
@@ -79,3 +80,6 @@ def clean_and_lower(value):
 def generate_bcrypt_hash(password):
     hashed_password = hashpw(password.encode('utf-8'), gensalt())
     return hashed_password.decode('utf-8')
+
+def is_prod():
+    return os.getenv('FLASK_ENV') == "production"

@@ -257,7 +257,7 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     else:
         print(f"Temporary file {temp_output_path} created successfully.")
 
-    progress_callback(50)
+    progress_callback(-1, "re-encoding the video file..")
 
     # re writing video to H.264 codec
     ffmpeg_command = [
@@ -268,7 +268,6 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     subprocess.run(ffmpeg_command, check=True)
 
     os.remove(temp_output_path)
-    progress_callback(100)
 
     visibility_durations = {}
     average_areas = {}

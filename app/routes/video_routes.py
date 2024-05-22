@@ -1,12 +1,12 @@
 import os
-from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file, redirect
+from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file, redirect, current_app
 from flask_socketio import leave_room, join_room
 from app.utils.helpers import token_required
 from config.config import AppConfig
 from werkzeug.utils import secure_filename
 from scripts.video_processing_script import video_processing
 from app.utils.db_helper import query_db
-from app.utils.helpers import generate_uuid
+from app.utils.helpers import generate_uuid, is_prod
 from app.constants.roles import roles
 from app import socketio
 
@@ -150,11 +150,11 @@ def upload(current_user):
 
     video_file.save(dest)
 
-    def progress_callback(progress_percentage):
-        socketio.emit('processing_progress', {'percentage': progress_percentage}, room=room_id)
+    def progress_callback(progress_percentage, message="processing..."):
+        socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
 
     def progress_callback_s3(progress_percentage):
-        socketio.emit('saving_processed_video', {'percentage': progress_percentage}, room=room_id)
+        socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
 
     vcd = video_processing(dest, output_file_path, progress_callback)
     vcd2 = str(vcd)
@@ -166,7 +166,12 @@ def upload(current_user):
 
     socketio.emit('compress_progress', {'percentage': 100}, room=room_id)
 
-    s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
+    s3_file_url = compressed_file_path
+
+    print("is_prod: ", is_prod())
+
+    if is_prod() == True:
+        s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
 
     video_id = insert_video_data(s3_file_url, comp_filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)
@@ -232,6 +237,22 @@ def processed_output(current_user,video_id):
 
     return jsonify({"billboards":  billboards, "video_details": video_details, 'video_coordinates': video_coordinates}), 200
 
+@video_bp.route('/videos/<video_id>', methods=['DELETE'])
+@token_required
+def delete_video(current_user, video_id):
+
+    q = "DELETE FROM video_coordinates WHERE video_id=%s"
+    query_db(q, (video_id,), commit=True)
+
+    q = "DELETE FROM billboards WHERE video_id=%s"
+    query_db(q, (video_id,), commit=True)
+
+    q = "DELETE FROM videofiles WHERE video_id=%s"
+    query_db(q, (video_id,), commit=True)
+
+    return jsonify({"message": "Deleted successfully!"})
+
+
 @video_bp.route('/billboards/merge', methods=['POST'])
 @token_required
 def merge_billborads(current_user):
@@ -280,6 +301,24 @@ def merge_billborads(current_user):
 
     return jsonify({"message": "Merge successful"}), 200
 
+
+@video_bp.route('/billboards/delete', methods=['POST'])
+@token_required
+def delete_billboards(current_user):
+    data = request.get_json()
+    billboard_ids = data.get('billboard_ids', [])
+
+    if not billboard_ids:
+        return jsonify({'message': 'No billboard IDs provided'}), 400
+
+    q = """
+        DELETE FROM billboards WHERE id IN ({})
+    """.format(','.join('%s' for _ in billboard_ids))
+
+    query_db(q, billboard_ids, commit=True)
+
+    return jsonify({ "message": "saved successfully!"})
+
 def insert_video_data(output_file_path, filename, zone_id, state_id, city_id, created_by_user_id):
     video_query = """
         INSERT INTO videofiles (video_id, filename, video_path, zone_id, state_id, city_id, created_by_user_id)
@@ -292,8 +331,20 @@ def insert_video_data(output_file_path, filename, zone_id, state_id, city_id, cr
 
 def insert_billboard_data(video_id, user_id, billboard_data):
     for tracker_id, data in billboard_data.items():
+        bill_id = generate_uuid()
+        visibility_duration = round(data.get('visibility_duration', 0), 2)
+        distance_to_center = round(data.get('distance_to_center', 0), 2)
+        central_duration = round(data['BillBoard_Region_Duration and Distance'].get('Central', 0), 2)
+        near_p_duration = round(data['BillBoard_Region_Duration and Distance'].get('Near P', 0), 2)
+        mid_p_duration = round(data['BillBoard_Region_Duration and Distance'].get('Mid P', 0), 2)
+        far_p_duration = round(data['BillBoard_Region_Duration and Distance'].get('Far P', 0), 2)
+        central_distance = round(data['BillBoard_Region_Duration and Distance'].get('Central Dist', 0), 2)
+        near_p_distance = round(data['BillBoard_Region_Duration and Distance'].get('Near P Dist', 0), 2)
+        mid_p_distance = round(data['BillBoard_Region_Duration and Distance'].get('Mid P Dist', 0), 2)
+        far_p_distance = round(data['BillBoard_Region_Duration and Distance'].get('Far P Dist', 0), 2)
+        average_areas = round(data.get('Average Areas', 0), 2)
+        confidence = round(data.get('Confidence', 0), 2)
 
-        bill_id = generate_uuid();
         billboard_query = """
             INSERT INTO billboards (id, video_id, visibility_duration, distance_to_center, central_duration, near_p_duration, mid_p_duration, far_p_duration, 
                                     central_distance, near_p_distance, mid_p_distance, far_p_distance, average_areas, confidence, tracker_id, created_by_user_id)
@@ -302,18 +353,18 @@ def insert_billboard_data(video_id, user_id, billboard_data):
         billboard_args = (
             bill_id,
             video_id,
-            data['visibility_duration'],
-            data['distance_to_center'],
-            data['BillBoard_Region_Duration and Distance']['Central'],
-            data['BillBoard_Region_Duration and Distance']['Near P'],
-            data['BillBoard_Region_Duration and Distance']['Mid P'],
-            data['BillBoard_Region_Duration and Distance']['Far P'],
-            data['BillBoard_Region_Duration and Distance']['Central Dist'],
-            data['BillBoard_Region_Duration and Distance']['Near P Dist'],
-            data['BillBoard_Region_Duration and Distance']['Mid P Dist'],
-            data['BillBoard_Region_Duration and Distance']['Far P Dist'],
-            data['Average Areas'],
-            data['Confidence'],
+            visibility_duration,
+            distance_to_center,
+            central_duration,
+            near_p_duration,
+            mid_p_duration,
+            far_p_duration,
+            central_distance,
+            near_p_distance,
+            mid_p_distance,
+            far_p_distance,
+            average_areas,
+            confidence,
             tracker_id,
             user_id
         )
