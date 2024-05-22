@@ -180,16 +180,13 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     generator = get_video_frames_generator(File)
     line_annotator = LineCounterAnnotator(thickness=4, text_thickness=4, text_scale=2)
 
-    # Use MJPG codec to write initial video, will re-encode to H.264 later
     fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-    temp_output_path = str(uuid.uuid4()) + 'temp_output.avi'  # Temporary file path
+    temp_output_path = str(uuid.uuid4()) + 'temp_output.avi'
     output_video = cv2.VideoWriter(temp_output_path, fourcc, video_info.fps, (video_info.width, video_info.height))
 
-    # Check if the video writer is successfully opened
     if not output_video.isOpened():
         raise Exception(f"Could not open video writer for {temp_output_path}")
 
-    # Dictionary to store the start frame and end frame of each detected billboard
     billboard_frames = {}
     billboard_regions = {}
     total_frames = video_info.total_frames
@@ -248,18 +245,13 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
             w1, h1 = write_text(frame, label3, (int(box[0]), int(box[1]) + h + h0 + 10 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
             write_text(frame, label2, (int(box[0]), int(box[1]) + h + h0 + h1 + 20 + y_thres), cv2.FONT_ITALIC, 1.1, (255, 0, 0), 3, (0, 255, 255))
 
-        
-        # Write the modified frame to the output video
         output_video.write(frame)
 
-        # Report the percentage
         progress_percentage = int((frame_idx + 1) / total_frames * 100)
         progress_callback(progress_percentage)
 
-    # Release the VideoWriter object
     output_video.release()
 
-    # Check if the temporary file was created and is playable
     if not os.path.exists(temp_output_path):
         raise Exception(f"Temporary file {temp_output_path} was not created.")
     else:
@@ -267,18 +259,17 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
     progress_callback(50)
 
-    # Use ffmpeg to re-encode the video with H.264 codec
+    # re writing video to H.264 codec
     ffmpeg_command = [
         'ffmpeg', '-i', temp_output_path, '-vcodec', 'libx264', '-crf', '23', '-preset', 'medium',
         '-pix_fmt', 'yuv420p', TARGET_VIDEO_PATH
     ]
+
     subprocess.run(ffmpeg_command, check=True)
 
-    # Clean up the temporary file
     os.remove(temp_output_path)
     progress_callback(100)
 
-    # After processing all frames, calculate the duration of visibility and distance to center for each billboard
     visibility_durations = {}
     average_areas = {}
     average_confidence = {}
@@ -299,7 +290,7 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
             average_areas[tracker_id] = average_area
         if end_frame is not None:
             visibility_duration = end_frame - start_frame + 1
-            # Calculate the distance between the center of the billboard and the center of the image
+
             image_center = (video_info.width / 2, video_info.height / 2)
             distance_to_center = euclidean_distance(center, image_center)
 
