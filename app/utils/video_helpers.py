@@ -8,7 +8,6 @@ import ffmpeg
 
 api_key = os.getenv('GOOGLE_VISION_API_KEY')
 
-# Function to perform text detection using the Vision API
 def detect_text(image_content):
     vision_api_url = 'https://vision.googleapis.com/v1/images:annotate?key={}'.format(api_key)
     image_content_base64 = base64.b64encode(image_content).decode('utf-8')
@@ -89,17 +88,24 @@ def get_coordinates_from_video(video_path, interval=10):
     return detected_texts
 
 def detected_text_to_data(response_text=""):
-    
-    match = re.search(r"(\d+)km\/h,(.+),(.+)", response_text)
+    match = re.search( r'([0O]|\d+)km/h\s*[,.\s]*([NS]\d+\.\d+)[,.\s]*([EW]\d+\.\d+)' , response_text)
     if match:
-        speed = int(match.group(1))
+        speed = match.group(1)
+        if speed == 'O':
+            speed = 0
+        else:
+            speed = int(speed)
+            
         latitude = float(match.group(2).replace("N", ""))
         longitude = float(match.group(3).replace("E", ""))
+        print(speed, latitude, longitude)
+
 
         return speed, latitude, longitude
         
     else:
         return None
+
 
 def compress_video(input_file, output_file):
   input_stream = ffmpeg.input(input_file)

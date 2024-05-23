@@ -46,3 +46,6 @@ def get_presigned_url(object_name=None, bucket_name="loc8-tech-processed-videos"
     )
     print(signed_url)
     return signed_url
+
+def delete_obj(bucket_name="loc8-tech-processed-videos", object_name=None):
+    s3.delete_object(Bucket=bucket_name, Key=object_name)

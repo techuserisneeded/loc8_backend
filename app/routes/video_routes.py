@@ -11,7 +11,7 @@ from app.constants.roles import roles
 from app import socketio
 
 from app.utils.video_helpers import get_coordinates_from_video, compress_video
-from app.libs.boto3 import upload_video_to_s3, get_presigned_url
+from app.libs.boto3 import upload_video_to_s3, get_presigned_url, delete_obj
 
 
 video_bp = Blueprint('videos', __name__)
@@ -40,12 +40,20 @@ def on_leave(data):
 
 @video_bp.route('/uploads/<filename>')
 def stream_video(filename):
-
+ 
     video_q = 'SELECT * FROM videofiles WHERE filename=%s'
     video_details = query_db(video_q, (filename,))
 
     if not video_details:
         return abort(401)
+    
+    if not is_prod():
+        video_path = video_details[0]['video_path']
+
+        if not os.path.isfile(video_path):
+            return abort(401)
+        
+        return send_file(video_path, mimetype='video/mp4', as_attachment=False)
     
     file_url = get_presigned_url(video_details[0]['filename'])
 
@@ -168,9 +176,7 @@ def upload(current_user):
 
     s3_file_url = compressed_file_path
 
-    print("is_prod: ", is_prod())
-
-    if is_prod() == True:
+    if is_prod():
         s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
 
     video_id = insert_video_data(s3_file_url, comp_filename, zone_id, state_id, city_id, current_user['id'])
@@ -196,7 +202,9 @@ def upload(current_user):
 
     os.remove(dest)
     os.remove(output_file_path)
-    os.remove(compressed_file_path)
+
+    if is_prod():
+        os.remove(compressed_file_path)
 
     return jsonify({"billboards":  billboards, "video_details": video_details}), 200
     # return jsonify({"billboards":  "", "video_details": ""}), 200
@@ -241,6 +249,12 @@ def processed_output(current_user,video_id):
 @token_required
 def delete_video(current_user, video_id):
 
+    video_q = 'SELECT * FROM videofiles WHERE video_id=%s'
+    video_details = query_db(video_q, (video_id,), one=True)
+
+    if not video_details:
+        return abort(404)
+
     q = "DELETE FROM video_coordinates WHERE video_id=%s"
     query_db(q, (video_id,), commit=True)
 
@@ -249,6 +263,12 @@ def delete_video(current_user, video_id):
 
     q = "DELETE FROM videofiles WHERE video_id=%s"
     query_db(q, (video_id,), commit=True)
+
+    if not is_prod():
+        os.remove(video_details['video_path'])
+    else:
+        delete_obj(object_name=video_details['filename'])
+
 
     return jsonify({"message": "Deleted successfully!"})
 
