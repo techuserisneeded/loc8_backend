@@ -5,6 +5,7 @@ import re
 import os
 import math
 import ffmpeg
+from app.utils.helpers import haversine_distance
 
 api_key = os.getenv('GOOGLE_VISION_API_KEY')
 
@@ -106,8 +107,27 @@ def detected_text_to_data(response_text=""):
     else:
         return None
 
-
 def compress_video(input_file, output_file):
   input_stream = ffmpeg.input(input_file)
   output_stream = input_stream.output(output_file, crf=18)
   ffmpeg.run(output_stream)
+
+def calculate_avg_speed_stretched(video_coordinates=[]):
+
+    stretched_in_meters = 0.0
+    avg_speed = 0
+
+    speed = 0
+    for coords in video_coordinates:
+        speed = speed + int(coords['speed'])
+
+    if len(video_coordinates) > 0:
+        avg_speed = speed / len(video_coordinates)
+
+    for i in range(len(video_coordinates) - 1):
+        lat1, lon1 = video_coordinates[i]['latitude'], video_coordinates[i]['longitude']
+        lat2, lon2 = video_coordinates[i + 1]['latitude'], video_coordinates[i + 1]['longitude']
+
+        stretched_in_meters += haversine_distance(lat1, lon1, lat2, lon2)
+
+    return avg_speed, round(stretched_in_meters, 2)

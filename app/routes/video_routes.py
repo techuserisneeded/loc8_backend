@@ -10,7 +10,7 @@ from app.utils.helpers import generate_uuid, is_prod
 from app.constants.roles import roles
 from app import socketio
 
-from app.utils.video_helpers import get_coordinates_from_video, compress_video
+from app.utils.video_helpers import get_coordinates_from_video, compress_video, calculate_avg_speed_stretched
 from app.libs.boto3 import upload_video_to_s3, get_presigned_url, delete_obj
 
 
@@ -75,12 +75,8 @@ def get_all_videos(current_user):
 
     if user_role_id == roles.get('SUPERADMIN'):
         video_q = """
-            SELECT 	billboards.*, 
-                    videofiles.filename, videofiles.video_path, 
-                    videofiles.created_at, videofiles.created_by_user_id,
-                    states.state_name, cities.city_name, zones.zone_name
-            FROM billboards
-            INNER JOIN videofiles ON billboards.video_id = videofiles.video_id
+            SELECT 	videofiles.*, states.state_name, cities.city_name, zones.zone_name
+            FROM videofiles
             INNER JOIN states ON videofiles.state_id = states.state_id
             INNER JOIN cities ON videofiles.city_id = cities.city_id
             INNER JOIN zones ON videofiles.zone_id = zones.zone_id
@@ -90,47 +86,73 @@ def get_all_videos(current_user):
 
     else: 
         video_q = """
-        SELECT 	billboards.*, 
-                    videofiles.filename, videofiles.video_path, 
-                    videofiles.created_at, videofiles.created_by_user_id,
-                    states.state_name, cities.city_name, zones.zone_name
-            FROM billboards
-            JOIN videofiles ON billboards.video_id = videofiles.video_id
-            JOIN states ON videofiles.state_id = states.state_id
-            JOIN cities ON videofiles.city_id = cities.city_id
-            JOIN zones ON videofiles.zone_id = zones.zone_id
+         SELECT videofiles.*, states.state_name, cities.city_name, zones.zone_name
+            FROM videofiles
+            INNER JOIN states ON videofiles.state_id = states.state_id
+            INNER JOIN cities ON videofiles.city_id = cities.city_id
+            INNER JOIN zones ON videofiles.zone_id = zones.zone_id
             WHERE videofiles.created_by_user_id = %s
         """
         video_details = query_db(video_q, (user_id,))
 
-    coordinates_by_video = {};
+    # if user_role_id == roles.get('SUPERADMIN'):
+    #     video_q = """
+    #         SELECT 	billboards.*, 
+    #                 videofiles.filename, videofiles.video_path, 
+    #                 videofiles.created_at, videofiles.created_by_user_id,
+    #                 states.state_name, cities.city_name, zones.zone_name
+    #         FROM billboards
+    #         INNER JOIN videofiles ON billboards.video_id = videofiles.video_id
+    #         INNER JOIN states ON videofiles.state_id = states.state_id
+    #         INNER JOIN cities ON videofiles.city_id = cities.city_id
+    #         INNER JOIN zones ON videofiles.zone_id = zones.zone_id
+    #      """
+
+    #     video_details = query_db(video_q, ())
+
+    # else: 
+    #     video_q = """
+    #     SELECT 	billboards.*, 
+    #                 videofiles.filename, videofiles.video_path, 
+    #                 videofiles.created_at, videofiles.created_by_user_id,
+    #                 states.state_name, cities.city_name, zones.zone_name
+    #         FROM billboards
+    #         JOIN videofiles ON billboards.video_id = videofiles.video_id
+    #         JOIN states ON videofiles.state_id = states.state_id
+    #         JOIN cities ON videofiles.city_id = cities.city_id
+    #         JOIN zones ON videofiles.zone_id = zones.zone_id
+    #         WHERE videofiles.created_by_user_id = %s
+    #     """
+    #     video_details = query_db(video_q, (user_id,))
+
+    # coordinates_by_video = {};
 
     if not video_details:
         video_details = []
 
-    for billboard_details in video_details:
+    # for billboard_details in video_details:
 
-        video_id = billboard_details['video_id']
+    #     video_id = billboard_details['video_id']
 
-        if video_id not in coordinates_by_video:
-            video_coordinates = query_db("""
-                        SELECT * FROM video_coordinates WHERE video_id=%s
-                """, (billboard_details['video_id'],))
-            coordinates_by_video[video_id] = video_coordinates
+    #     if video_id not in coordinates_by_video:
+    #         video_coordinates = query_db("""
+    #                     SELECT * FROM video_coordinates WHERE video_id=%s
+    #             """, (billboard_details['video_id'],))
+    #         coordinates_by_video[video_id] = video_coordinates
 
-        if coordinates_by_video[video_id]:
-            for idx, coords in enumerate(coordinates_by_video[video_id]):
-                billboard_details['latitude' + str(idx)] = coords['latitude']
-                billboard_details['longitude'+ str(idx)] = coords['longitude']
-                billboard_details['speed'+ str(idx)] = coords['speed']
+    #     if coordinates_by_video[video_id]:
+    #         for idx, coords in enumerate(coordinates_by_video[video_id]):
+    #             billboard_details['latitude' + str(idx)] = coords['latitude']
+    #             billboard_details['longitude'+ str(idx)] = coords['longitude']
+    #             billboard_details['speed'+ str(idx)] = coords['speed']
 
-        else:
-            for idx in range(6):
-                billboard_details['latitude' + str(idx)] = 0
-                billboard_details['longitude'+ str(idx)] = 0
-                billboard_details['speed'+ str(idx)] = 0
+    #     else:
+    #         for idx in range(6):
+    #             billboard_details['latitude' + str(idx)] = 0
+    #             billboard_details['longitude'+ str(idx)] = 0
+    #             billboard_details['speed'+ str(idx)] = 0
 
-            response.append(billboard_details)
+    #         response.append(billboard_details)
 
     
     return jsonify(video_details), 200
@@ -158,7 +180,7 @@ def upload(current_user):
 
     video_file.save(dest)
 
-    def progress_callback(progress_percentage, message="processing..."):
+    def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
 
     def progress_callback_s3(progress_percentage):
@@ -168,11 +190,11 @@ def upload(current_user):
     vcd2 = str(vcd)
     vcd3 = vcd2[0:2]
 
-    socketio.emit('compress_progress', {'percentage': -1}, room=room_id)
+    progress_callback(-1, "compressing...")
 
     compress_video(output_file_path, compressed_file_path)
 
-    socketio.emit('compress_progress', {'percentage': 100}, room=room_id)
+    progress_callback(100, "compressing...")
 
     s3_file_url = compressed_file_path
 
@@ -213,9 +235,10 @@ def upload(current_user):
 @video_bp.route('/output/<video_id>', methods=['GET',])
 @token_required
 def processed_output(current_user,video_id):
-    bill_q = "SELECT * FROM billboards WHERE video_id = %s ORDER BY tracker_id ASC";
-    billboards = query_db(bill_q, (video_id,))
-   
+
+    user_id = current_user['id']
+    user_role_id = current_user['role_id']
+
     video_q = """
         SELECT  v.video_id, 
                 v.filename,
@@ -233,44 +256,66 @@ def processed_output(current_user,video_id):
     """
     video_details = query_db(video_q, (video_id,), True)
 
-    video_q = """
-        SELECT * FROM video_coordinates
-        WHERE video_id=%s
-    """
+    if user_role_id == roles.get('SUPERADMIN') or video_details['created_by_user_id'] == user_id:
 
-    video_coordinates = query_db(video_q, (video_id,))
+        bill_q = "SELECT * FROM billboards WHERE video_id = %s ORDER BY tracker_id ASC";
+        billboards = query_db(bill_q, (video_id,))
 
-    if not video_coordinates:
-        video_coordinates = []
+        video_q = """
+            SELECT * FROM video_coordinates
+            WHERE video_id=%s
+        """
 
-    return jsonify({"billboards":  billboards, "video_details": video_details, 'video_coordinates': video_coordinates}), 200
+        video_coordinates = query_db(video_q, (video_id,))
+
+        if not video_coordinates:
+            video_coordinates = []
+
+        avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
+
+        return jsonify({
+            "billboards":  billboards, 
+            "video_details": video_details, 
+            'video_coordinates': video_coordinates, 
+            'avg_speed_km': avg_speed_km, 
+            'stretched_in_meters': stretched_in_meters
+        }), 200
+    
+    return jsonify({"message": "You are unauthorized!"}), 401
 
 @video_bp.route('/videos/<video_id>', methods=['DELETE'])
 @token_required
 def delete_video(current_user, video_id):
 
+    user_id = current_user['id']
+    user_role_id = current_user['role_id']
+    
     video_q = 'SELECT * FROM videofiles WHERE video_id=%s'
     video_details = query_db(video_q, (video_id,), one=True)
 
     if not video_details:
         return abort(404)
 
-    q = "DELETE FROM video_coordinates WHERE video_id=%s"
-    query_db(q, (video_id,), commit=True)
+    if user_role_id == roles.get('SUPERADMIN') or video_details['created_by_user_id'] == user_id:
 
-    q = "DELETE FROM billboards WHERE video_id=%s"
-    query_db(q, (video_id,), commit=True)
+        q = "DELETE FROM video_coordinates WHERE video_id=%s"
+        query_db(q, (video_id,), commit=True)
 
-    q = "DELETE FROM videofiles WHERE video_id=%s"
-    query_db(q, (video_id,), commit=True)
+        q = "DELETE FROM billboards WHERE video_id=%s"
+        query_db(q, (video_id,), commit=True)
 
-    if not is_prod():
-        os.remove(video_details['video_path'])
+        q = "DELETE FROM videofiles WHERE video_id=%s"
+        query_db(q, (video_id,), commit=True)
+
+        if not is_prod():
+            os.remove(video_details['video_path'])
+        else:
+            delete_obj(object_name=video_details['filename'])
+
+        return jsonify({"message": "Deleted successfully!"})
+    
     else:
-        delete_obj(object_name=video_details['filename'])
-
-
-    return jsonify({"message": "Deleted successfully!"})
+        return jsonify({"message": "You are unauthorized!"}), 401
 
 
 @video_bp.route('/billboards/merge', methods=['POST'])
