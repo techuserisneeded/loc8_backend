@@ -236,9 +236,6 @@ def upload(current_user):
 @token_required
 def processed_output(current_user,video_id):
 
-    user_id = current_user['id']
-    user_role_id = current_user['role_id']
-
     video_q = """
         SELECT  v.video_id, 
                 v.filename,
@@ -256,32 +253,28 @@ def processed_output(current_user,video_id):
     """
     video_details = query_db(video_q, (video_id,), True)
 
-    if user_role_id == roles.get('SUPERADMIN') or video_details['created_by_user_id'] == user_id:
+    bill_q = "SELECT * FROM billboards WHERE video_id = %s ORDER BY tracker_id ASC";
+    billboards = query_db(bill_q, (video_id,))
 
-        bill_q = "SELECT * FROM billboards WHERE video_id = %s ORDER BY tracker_id ASC";
-        billboards = query_db(bill_q, (video_id,))
+    video_q = """
+        SELECT * FROM video_coordinates
+        WHERE video_id=%s
+    """
 
-        video_q = """
-            SELECT * FROM video_coordinates
-            WHERE video_id=%s
-        """
+    video_coordinates = query_db(video_q, (video_id,))
 
-        video_coordinates = query_db(video_q, (video_id,))
+    if not video_coordinates:
+        video_coordinates = []
 
-        if not video_coordinates:
-            video_coordinates = []
+    avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
 
-        avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
-
-        return jsonify({
-            "billboards":  billboards, 
-            "video_details": video_details, 
-            'video_coordinates': video_coordinates, 
-            'avg_speed_km': avg_speed_km, 
-            'stretched_in_meters': stretched_in_meters
-        }), 200
-    
-    return jsonify({"message": "You are unauthorized!"}), 401
+    return jsonify({
+        "billboards":  billboards, 
+        "video_details": video_details, 
+        'video_coordinates': video_coordinates, 
+        'avg_speed_km': avg_speed_km, 
+        'stretched_in_meters': stretched_in_meters
+    }), 200
 
 @video_bp.route('/videos/<video_id>', methods=['DELETE'])
 @token_required
@@ -298,22 +291,29 @@ def delete_video(current_user, video_id):
 
     if user_role_id == roles.get('SUPERADMIN') or video_details['created_by_user_id'] == user_id:
 
-        q = "DELETE FROM video_coordinates WHERE video_id=%s"
-        query_db(q, (video_id,), commit=True)
+        try:
+            query_db("START TRANSACTION")
 
-        q = "DELETE FROM billboards WHERE video_id=%s"
-        query_db(q, (video_id,), commit=True)
+            q = "DELETE FROM video_coordinates WHERE video_id=%s"
+            query_db(q, (video_id,))
 
-        q = "DELETE FROM videofiles WHERE video_id=%s"
-        query_db(q, (video_id,), commit=True)
+            q = "DELETE FROM billboards WHERE video_id=%s"
+            query_db(q, (video_id,))
 
-        if not is_prod():
-            os.remove(video_details['video_path'])
-        else:
-            delete_obj(object_name=video_details['filename'])
+            q = "DELETE FROM videofiles WHERE video_id=%s"
+            query_db(q, (video_id,))
 
-        return jsonify({"message": "Deleted successfully!"})
-    
+            if not is_prod():
+                os.remove(video_details['video_path'])
+            else:
+                delete_obj(object_name=video_details['filename'])
+
+            query_db("COMMIT")
+
+            return jsonify({"message": "Deleted successfully!"})
+        except:
+            query_db("ROLLBACK")
+            return jsonify({"message": "Unable to delete!"}),500
     else:
         return jsonify({"message": "You are unauthorized!"}), 401
 
@@ -323,7 +323,6 @@ def delete_video(current_user, video_id):
 def merge_billborads(current_user):
     data = request.get_json()
     billboard_ids = data.get('billboard_ids', [])
-    user_id = current_user['id']
 
     if not billboard_ids:
         return jsonify({"error": "No billboard IDs provided"}), 400
