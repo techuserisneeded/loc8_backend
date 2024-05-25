@@ -134,12 +134,14 @@ def calculate_avg_speed_stretched(video_coordinates=[]):
         speed = speed + int(coords['speed'])
 
     if len(video_coordinates) > 0:
-        avg_speed = speed / len(video_coordinates)
+        avg_speed = round(speed / len(video_coordinates), 2)
 
     for i in range(len(video_coordinates) - 1):
         lat1, lon1 = video_coordinates[i]['latitude'], video_coordinates[i]['longitude']
         lat2, lon2 = video_coordinates[i + 1]['latitude'], video_coordinates[i + 1]['longitude']
 
         stretched_in_meters += haversine_distance(lat1, lon1, lat2, lon2)
+    
+    stretched_in_meters = round(stretched_in_meters, 2)
 
     return avg_speed, stretched_in_meters
