@@ -41,7 +41,7 @@ from ultralytics import YOLO
 
 @dataclass(frozen=True)
 class BYTETrackerArgs:
-    track_thresh: float = 0.53
+    track_thresh: float = 0.48
     track_buffer: int = 20
     match_thresh: float = 0.8
     aspect_ratio_thresh: int = -1
@@ -192,7 +192,7 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     total_frames = video_info.total_frames
 
     for frame_idx, frame in enumerate(tqdm(generator, total=video_info.total_frames)):
-        results = model(frame, conf=0.53)
+        results = model(frame, conf=0.48)
         detections = Detections(
             xyxy=results[0].boxes.xyxy.cpu().numpy(),
             confidence=results[0].boxes.conf.cpu().numpy(),
