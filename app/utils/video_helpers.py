@@ -46,8 +46,21 @@ def get_coordinates_from_video(video_path, interval=10):
         return
 
     while True:
-
-        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count + interval * frame_rate)
+        current_time = frame_count // frame_rate
+        if current_time == 0:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 10:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 20:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 30:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 40:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 50:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+        if current_time == 60:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
         ret, frame = cap.read()
 
         if not ret:
@@ -89,7 +102,8 @@ def get_coordinates_from_video(video_path, interval=10):
     return detected_texts
 
 def detected_text_to_data(response_text=""):
-    match = re.search( r'([0O]|\d+)km/h\s*[,.\s]*([NS]\d+\.\d+)[,.\s]*([EW]\d+\.\d+)' , response_text)
+    match = re.search( r'([0O]|\d+)km/h\s*[,.\s]*([NS]\d+\.\d+)\s*[,.\s]*([EW]\d+\.\d+)\s*'
+ , response_text)
     if match:
         speed = match.group(1)
         if speed == 'O':
@@ -99,9 +113,6 @@ def detected_text_to_data(response_text=""):
             
         latitude = float(match.group(2).replace("N", ""))
         longitude = float(match.group(3).replace("E", ""))
-        print(speed, latitude, longitude)
-
-
         return speed, latitude, longitude
         
     else:
@@ -119,6 +130,7 @@ def calculate_avg_speed_stretched(video_coordinates=[]):
 
     speed = 0
     for coords in video_coordinates:
+        print(coords)
         speed = speed + int(coords['speed'])
 
     if len(video_coordinates) > 0:
@@ -130,4 +142,4 @@ def calculate_avg_speed_stretched(video_coordinates=[]):
 
         stretched_in_meters += haversine_distance(lat1, lon1, lat2, lon2)
 
-    return avg_speed, round(stretched_in_meters, 2)
+    return avg_speed, stretched_in_meters

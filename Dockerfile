@@ -33,6 +33,10 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+RUN sudo apt-get update
+
+RUN sudo apt-get install gcc libmysqlclient-dev python3-dev
+
 RUN pip install opencv-python-headless
 RUN pip install protobuf==3.20.2
 
