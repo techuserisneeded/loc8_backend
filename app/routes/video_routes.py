@@ -73,36 +73,10 @@ def get_all_videos(current_user):
     video_details = []
     response = []
 
-    if user_role_id == roles.get('SUPERADMIN'):
-        video_q = """
-            SELECT 	videofiles.*, states.state_name, cities.city_name, zones.zone_name
-            FROM videofiles
-            INNER JOIN states ON videofiles.state_id = states.state_id
-            INNER JOIN cities ON videofiles.city_id = cities.city_id
-            INNER JOIN zones ON videofiles.zone_id = zones.zone_id
-         """
-
-        video_details = query_db(video_q, ())
-
-    else: 
-        video_q = """
-         SELECT videofiles.*, states.state_name, cities.city_name, zones.zone_name
-            FROM videofiles
-            INNER JOIN states ON videofiles.state_id = states.state_id
-            INNER JOIN cities ON videofiles.city_id = cities.city_id
-            INNER JOIN zones ON videofiles.zone_id = zones.zone_id
-            WHERE videofiles.created_by_user_id = %s
-        """
-        video_details = query_db(video_q, (user_id,))
-
     # if user_role_id == roles.get('SUPERADMIN'):
     #     video_q = """
-    #         SELECT 	billboards.*, 
-    #                 videofiles.filename, videofiles.video_path, 
-    #                 videofiles.created_at, videofiles.created_by_user_id,
-    #                 states.state_name, cities.city_name, zones.zone_name
-    #         FROM billboards
-    #         INNER JOIN videofiles ON billboards.video_id = videofiles.video_id
+    #         SELECT 	videofiles.*, states.state_name, cities.city_name, zones.zone_name
+    #         FROM videofiles
     #         INNER JOIN states ON videofiles.state_id = states.state_id
     #         INNER JOIN cities ON videofiles.city_id = cities.city_id
     #         INNER JOIN zones ON videofiles.zone_id = zones.zone_id
@@ -112,47 +86,73 @@ def get_all_videos(current_user):
 
     # else: 
     #     video_q = """
-    #     SELECT 	billboards.*, 
-    #                 videofiles.filename, videofiles.video_path, 
-    #                 videofiles.created_at, videofiles.created_by_user_id,
-    #                 states.state_name, cities.city_name, zones.zone_name
-    #         FROM billboards
-    #         JOIN videofiles ON billboards.video_id = videofiles.video_id
-    #         JOIN states ON videofiles.state_id = states.state_id
-    #         JOIN cities ON videofiles.city_id = cities.city_id
-    #         JOIN zones ON videofiles.zone_id = zones.zone_id
+    #      SELECT videofiles.*, states.state_name, cities.city_name, zones.zone_name
+    #         FROM videofiles
+    #         INNER JOIN states ON videofiles.state_id = states.state_id
+    #         INNER JOIN cities ON videofiles.city_id = cities.city_id
+    #         INNER JOIN zones ON videofiles.zone_id = zones.zone_id
     #         WHERE videofiles.created_by_user_id = %s
     #     """
     #     video_details = query_db(video_q, (user_id,))
 
-    # coordinates_by_video = {};
+    if user_role_id == roles.get('SUPERADMIN'):
+        video_q = """
+            SELECT 	billboards.*, 
+                    videofiles.filename, videofiles.video_path, 
+                    videofiles.created_at, videofiles.created_by_user_id,
+                    states.state_name, cities.city_name, zones.zone_name
+            FROM billboards
+            INNER JOIN videofiles ON billboards.video_id = videofiles.video_id
+            INNER JOIN states ON videofiles.state_id = states.state_id
+            INNER JOIN cities ON videofiles.city_id = cities.city_id
+            INNER JOIN zones ON videofiles.zone_id = zones.zone_id
+         """
+
+        video_details = query_db(video_q, ())
+
+    else: 
+        video_q = """
+        SELECT 	billboards.*, 
+                    videofiles.filename, videofiles.video_path, 
+                    videofiles.created_at, videofiles.created_by_user_id,
+                    states.state_name, cities.city_name, zones.zone_name
+            FROM billboards
+            JOIN videofiles ON billboards.video_id = videofiles.video_id
+            JOIN states ON videofiles.state_id = states.state_id
+            JOIN cities ON videofiles.city_id = cities.city_id
+            JOIN zones ON videofiles.zone_id = zones.zone_id
+            WHERE videofiles.created_by_user_id = %s
+        """
+        video_details = query_db(video_q, (user_id,))
+
+    coordinates_by_video = {};
 
     if not video_details:
         video_details = []
 
-    # for billboard_details in video_details:
+    for billboard_details in video_details:
 
-    #     video_id = billboard_details['video_id']
+        video_id = billboard_details['video_id']
 
-    #     if video_id not in coordinates_by_video:
-    #         video_coordinates = query_db("""
-    #                     SELECT * FROM video_coordinates WHERE video_id=%s
-    #             """, (billboard_details['video_id'],))
-    #         coordinates_by_video[video_id] = video_coordinates
+        if video_id not in coordinates_by_video:
+            video_coordinates = query_db("""
+                        SELECT * FROM video_coordinates WHERE video_id=%s
+                """, (billboard_details['video_id'],))
+            coordinates_by_video[video_id] = video_coordinates
 
-    #     if coordinates_by_video[video_id]:
-    #         for idx, coords in enumerate(coordinates_by_video[video_id]):
-    #             billboard_details['latitude' + str(idx)] = coords['latitude']
-    #             billboard_details['longitude'+ str(idx)] = coords['longitude']
-    #             billboard_details['speed'+ str(idx)] = coords['speed']
+        if coordinates_by_video[video_id]:
+            for idx, coords in enumerate(coordinates_by_video[video_id]):
+                billboard_details['latitude' + str(idx)] = coords['latitude']
+                billboard_details['longitude'+ str(idx)] = coords['longitude']
+                billboard_details['speed'+ str(idx)] = coords['speed']
 
-    #     else:
-    #         for idx in range(6):
-    #             billboard_details['latitude' + str(idx)] = 0
-    #             billboard_details['longitude'+ str(idx)] = 0
-    #             billboard_details['speed'+ str(idx)] = 0
+        else:
+            for idx in range(7):
+                billboard_details['latitude' + str(idx)] = 0
+                billboard_details['longitude'+ str(idx)] = 0
+                billboard_details['speed'+ str(idx)] = 0
 
-    #         response.append(billboard_details)
+            response.append(billboard_details)
 
     
     return jsonify(video_details), 200
