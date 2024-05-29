@@ -33,6 +33,7 @@ def detect_text(image_content):
 
     return data
 
+
 def get_coordinates_from_video(video_path, interval=10):
     cap = cv2.VideoCapture(video_path)
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
@@ -49,23 +50,55 @@ def get_coordinates_from_video(video_path, interval=10):
         current_time = frame_count // frame_rate
         if current_time == 0:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
         if current_time == 10:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
         if current_time == 20:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
+            
         if current_time == 30:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
+            
         if current_time == 40:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
+            
         if current_time == 50:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
+        
         if current_time == 60:
             cap.set(cv2.CAP_PROP_POS_FRAMES, frame_count)
-        ret, frame = cap.read()
-
-        if not ret:
+            ret, frame = cap.read()
+            if not ret:
+                print("End of video")
+                break
+        if current_time > 60:
             print("End of video")
             break
+
+        
 
         # Convert frame to image content
         height, width, _ = frame.shape
