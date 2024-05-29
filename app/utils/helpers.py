@@ -11,6 +11,8 @@ from app.constants.roles import roles
 def generate_uuid():
     return str(uuid.uuid4())
 
+def generate_defined_length_uuid(length=8):
+    return str(uuid.uuid4()).replace('-', '')[:length]
 
 def token_required(func):
     @wraps(func)

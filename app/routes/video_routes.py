@@ -1,12 +1,12 @@
 import os
-from flask import Blueprint, request, jsonify, send_from_directory,abort, send_file, redirect, current_app
+from flask import Blueprint, request, jsonify, abort, send_file, redirect, current_app
 from flask_socketio import leave_room, join_room
 from app.utils.helpers import token_required
 from config.config import AppConfig
 from werkzeug.utils import secure_filename
 from scripts.video_processing_script import video_processing
 from app.utils.db_helper import query_db
-from app.utils.helpers import generate_uuid, is_prod
+from app.utils.helpers import generate_uuid, is_prod, generate_defined_length_uuid
 from app.constants.roles import roles
 from app import socketio
 
@@ -170,15 +170,20 @@ def upload(current_user):
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
 
-    dest = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, secure_filename(generate_uuid() + video_file.filename)))
-    unique_id = generate_uuid()
-    filename = secure_filename("temp_" + unique_id + ".mp4")
-    output_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
+    unique_id = generate_defined_length_uuid(6) 
 
-    comp_filename = secure_filename(unique_id + ".mp4")
-    compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, comp_filename))
+    original_filename = secure_filename(video_file.filename)
+    filename_wo_ext, file_extension = os.path.splitext(original_filename)
 
-    video_file.save(dest)
+    raw_filename = secure_filename(generate_uuid() + video_file.filename)
+    filename = secure_filename(f"{filename_wo_ext}_{unique_id}{file_extension}")
+    processed_filename = secure_filename("temp_" + filename)
+
+    raw_file_path = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, raw_filename))
+    processed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, processed_filename))
+    compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
+
+    video_file.save(raw_file_path)
 
     def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
@@ -186,28 +191,28 @@ def upload(current_user):
     def progress_callback_s3(progress_percentage):
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
 
-    vcd = video_processing(dest, output_file_path, progress_callback)
+    vcd = video_processing(raw_file_path, processed_file_path, progress_callback)
     vcd2 = str(vcd)
     vcd3 = vcd2[0:2]
 
     progress_callback(-1, "compressing...")
 
-    compress_video(output_file_path, compressed_file_path)
+    compress_video(processed_file_path, compressed_file_path)
 
     progress_callback(100, "compressing...")
 
     s3_file_url = compressed_file_path
 
     if is_prod():
-        s3_file_url = upload_video_to_s3(compressed_file_path, comp_filename, progress_callback=progress_callback_s3)
+        s3_file_url = upload_video_to_s3(compressed_file_path, filename, progress_callback=progress_callback_s3)
 
-    video_id = insert_video_data(s3_file_url, comp_filename, zone_id, state_id, city_id, current_user['id'])
+    video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)
 
     # video_id = insert_video_data(compressed_file_path, comp_filename, zone_id, state_id, city_id, current_user['id'])
     # insert_billboard_data(video_id, current_user['id'], vcd)
 
-    coordinate_tuples = get_coordinates_from_video(dest)
+    coordinate_tuples = get_coordinates_from_video(raw_file_path)
 
     coordinates_q = """
         INSERT INTO `video_coordinates`(`video_id`, `speed`, `latitude`, `longitude`) 
@@ -222,8 +227,8 @@ def upload(current_user):
     video_q = "SELECT * FROM videofiles WHERE video_id = %s";
     video_details = query_db(video_q, (video_id,), True)
 
-    os.remove(dest)
-    os.remove(output_file_path)
+    os.remove(raw_file_path)
+    os.remove(processed_file_path)
 
     if is_prod():
         os.remove(compressed_file_path)
