@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 18, 2024 at 01:52 PM
+-- Generation Time: Jun 06, 2024 at 08:32 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -39,7 +39,7 @@ CREATE TABLE `assigned_budgets` (
 --
 
 INSERT INTO `assigned_budgets` (`id`, `user_id`, `budget_id`, `status`) VALUES
-('7001a0a3-f2e5-4b7f-9223-0150fdef12ff', 39, 'f92657bc-8f51-47f4-9b48-116af6f2b5ab', 2);
+('7001a0a3-f2e5-4b7f-9223-0150fdef12ff', 39, 'f92657bc-8f51-47f4-9b48-116af6f2b5ab', 0);
 
 -- --------------------------------------------------------
 
@@ -64,64 +64,130 @@ CREATE TABLE `billboards` (
   `confidence` float DEFAULT NULL,
   `tracker_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `created_by_user_id` int(11) NOT NULL
+  `created_by_user_id` int(11) NOT NULL,
+  `latitude` decimal(9,6) DEFAULT NULL,
+  `longitude` decimal(9,6) DEFAULT NULL,
+  `vendor_name` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `traffic_direction` varchar(255) DEFAULT NULL,
+  `media_type` varchar(255) DEFAULT NULL,
+  `illumination` varchar(255) DEFAULT NULL,
+  `width` int(11) DEFAULT NULL,
+  `height` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `area` int(11) DEFAULT NULL,
+  `display_cost_per_month` int(11) DEFAULT NULL,
+  `printing_rate` int(11) DEFAULT NULL,
+  `mounting_rate` int(11) DEFAULT NULL,
+  `printing_cost` int(11) DEFAULT NULL,
+  `mounting_cost` int(11) DEFAULT NULL,
+  `total_cost` int(11) DEFAULT NULL,
+  `site_image` varchar(255) DEFAULT NULL,
+  `map_image` varchar(255) DEFAULT NULL,
+  `focal_vision_duration` int(11) DEFAULT NULL,
+  `saliency_score_front` int(11) DEFAULT NULL,
+  `saliency_score_rear` int(11) DEFAULT NULL,
+  `net_saliency_score` int(11) DEFAULT NULL,
+  `duration` int(11) DEFAULT 0,
+  `rental_per_month` float DEFAULT 0,
+  `cost_for_duration` float DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `billboards`
 --
 
-INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`) VALUES
-('029c9a92-468c-4e8c-97a9-5a41a6bcef2d', '69d4a243-6950-42dd-8e7c-1d45e8cef77b', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 07:31:54', 1),
-('041fd610-92cf-47ad-b9b0-4f627ebd0dca', 'bb3cfc7f-2be7-45df-88be-18f3c0091069', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 11:24:22', 1),
-('079d1b32-b18d-4085-9a1d-8358dac9faa4', '0d1c4d77-88cd-4d70-9a59-4d6be705176d', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 11:48:26', 1),
-('0a1a4287-3a61-4cd8-ac33-0c6e708dc872', '2ef3b6ff-718d-49c3-9c72-87a8721e0a4f', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 07:42:55', 1),
-('0c597ecf-6e37-445a-be17-ef66ffe1b32e', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 0.533333, 40.9304, 0, 0.1, 0.3, 0.133333, 0, 37.5667, 35.1676, 32.6411, 1.94432, 0.739295, 14, '2024-04-09 16:34:17', 1),
-('13eb94d4-a158-48c4-9c34-c5ee6e3fe8c0', '69d4a243-6950-42dd-8e7c-1d45e8cef77b', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 07:31:54', 1),
-('1d68f8e9-f6b4-4c38-9fb5-d2ffeea24aa7', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 2.4, 40.1955, 0, 0.433333, 1.2, 0.5, 0, 71.4329, 77.2636, 86.201, 3.88608, 0.684429, 1, '2024-04-09 16:34:17', 1),
-('1e044922-1ae7-4195-b99c-8a94e570b584', '59240533-5a08-4fb8-b83e-eb42921f97e7', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 11:42:05', 1),
-('22c173bc-02b3-4f11-8d89-743655a314cf', '20454541-708f-4910-9774-f41923d6adb1', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 07:05:25', 1),
-('2552d048-6a11-4289-a536-0bc02bfd5cc7', '2ef3b6ff-718d-49c3-9c72-87a8721e0a4f', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 07:42:55', 1),
-('2f52bbaf-16b1-4896-9e9d-5ca434127729', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 6.33333, 42.3777, 0, 2.63333, 2.1, 1.43333, 0, 67.603, 76.5585, 86.6283, 2.02649, 0.721102, 5, '2024-04-09 16:34:17', 1),
-('3aa80501-fb38-4448-b9f7-73e0bac7575c', 'bb3cfc7f-2be7-45df-88be-18f3c0091069', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 11:24:22', 1),
-('4a99c16c-9857-4f88-82d8-9f8973d459e8', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 0.966667, 41.6873, 0, 0.266667, 0.466667, 0.233333, 0, 70.3299, 77.5462, 87.3839, 1.40408, 0.705476, 13, '2024-04-09 16:34:17', 1),
-('4cf1e31b-4b3e-42a4-b4e1-4e6e760761b3', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 4.46667, 41.9305, 0, 0, 3.36667, 0.4, 0, 0, 34.4727, 28.3116, 1.26869, 0.72868, 2, '2024-04-09 16:34:17', 1),
-('57a7d695-8bfd-423b-96fc-b97dc28c35df', 'a81c2c56-ea57-4de6-996f-09b2fc2c1f3e', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 10:33:10', 1),
-('59b9c5ee-67ba-4509-8130-2be5f7d80aed', 'bb3cfc7f-2be7-45df-88be-18f3c0091069', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 11:24:22', 1),
-('610bd002-53a3-4c6b-b182-25639d7deb7c', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 0.933333, 42.504, 0, 0.366667, 0.333333, 0.233333, 0, 68.5697, 76.9632, 87.4756, 1.31983, 0.764694, 10, '2024-04-09 16:34:17', 1),
-('6593ac54-4071-41ab-9680-87eda1c8f24c', '69d4a243-6950-42dd-8e7c-1d45e8cef77b', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 07:31:54', 1),
-('679af46e-ef32-4934-ba07-295f7efe2fae', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 0.766667, 41.9534, 0, 0.1, 0.4, 0.266667, 0, 70.874, 76.4563, 86.3429, 0.943969, 0.743478, 4, '2024-04-09 16:34:17', 1),
-('7771a603-7f16-485e-ac20-8da8639943ba', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 6.23333, 44.0014, 0, 0.7, 3.26667, 1.76667, 0, 38.2006, 35.9821, 34.6587, 1.99876, 0.717535, 9, '2024-04-09 16:34:17', 1),
-('77dd4666-8984-4183-bd9f-166d900822ad', '34887370-f11c-4987-9a8b-95624813de93', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 07:55:11', 1),
-('793a4b77-4713-4a04-be8f-df0b8680d7aa', 'a81c2c56-ea57-4de6-996f-09b2fc2c1f3e', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 10:33:10', 1),
-('8314fbff-3cf6-42c2-a5e7-48247e5f58a9', '59240533-5a08-4fb8-b83e-eb42921f97e7', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 11:42:05', 1),
-('85e6d299-833e-4504-9114-866a2e3b7bf2', '69d4a243-6950-42dd-8e7c-1d45e8cef77b', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 07:31:54', 1),
-('86db9e78-f682-46d5-9872-7ed2bdce467d', 'a81c2c56-ea57-4de6-996f-09b2fc2c1f3e', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 10:33:10', 1),
-('89346ab7-e885-4efb-8a99-88ba81a05a99', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1, 42.3359, 0, 0.2, 0.466667, 0.333333, 0, 70.3933, 76.3913, 86.5541, 0.92436, 0.723418, 16, '2024-04-09 16:34:17', 1),
-('8f376d3d-e44b-4e35-8797-5a4538890145', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1, 40.9369, 0, 0.466667, 0.366667, 0.166667, 0, 38.7022, 35.3083, 33.2759, 0.920398, 0.723142, 17, '2024-04-09 16:34:17', 1),
-('91133207-fc8a-4cc3-8cfc-4ca51595e752', '2ef3b6ff-718d-49c3-9c72-87a8721e0a4f', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 07:42:55', 1),
-('990a76a1-5ff0-4af2-9be8-f14c7eee3789', '20454541-708f-4910-9774-f41923d6adb1', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 07:05:25', 1),
-('a96520e8-09a9-429e-b35c-0b99a858ad9d', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 3.9, 42.8312, 0, 0, 0.866667, 3.03333, 0, 0, 31.9581, 30.6685, 2.33467, 0.766603, 6, '2024-04-09 16:34:17', 1),
-('aaf8d7e9-5833-4ccb-8d0e-eb1b3d3c4cee', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1.4, 42.2205, 0, 0.566667, 0.266667, 0.333333, 0, 67.6754, 77.9174, 87.145, 1.48693, 0.682638, 18, '2024-04-09 16:34:17', 1),
-('ad097b4e-0ba4-4ea1-aefd-fc11b6287e1f', '34887370-f11c-4987-9a8b-95624813de93', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 07:55:11', 1),
-('ad5b9617-fb38-4ee6-b822-041a0b2d93cd', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 2.06667, 42.0527, 0, 0, 0, 0.733333, 0, 0, 0, 30.3151, 1.25907, 0.642193, 3, '2024-04-09 16:34:17', 1),
-('b6916c56-9e39-4968-b5c8-09b49c305e37', '0d1c4d77-88cd-4d70-9a59-4d6be705176d', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 11:48:26', 1),
-('b9b10230-11f7-4e02-85c6-4719f952361d', '59240533-5a08-4fb8-b83e-eb42921f97e7', 4.36667, 42.2614, 0, 1.83333, 1.56667, 0.766667, 0, 66.924, 75.9757, 87.507, 2.39415, 0.706747, 2, '2024-05-18 11:42:05', 1),
-('ba5d7a38-b724-498d-bfdb-f0f28327cfde', '59240533-5a08-4fb8-b83e-eb42921f97e7', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 11:42:05', 1),
-('bf113c58-13a6-4267-b5c5-a2b534a215cc', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 0.966667, 42.7744, 0, 0.266667, 0.4, 0.3, 0, 69.8988, 77.0088, 87.527, 1.08155, 0.763546, 20, '2024-04-09 16:34:17', 1),
-('bfe99e47-352f-4d93-98d1-f7ef3c577ddb', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1.03333, 41.9312, 0, 0.233333, 0.466667, 0.333333, 0, 69.9373, 76.3831, 86.6714, 1.70097, 0.741187, 15, '2024-04-09 16:34:17', 1),
-('c5b39eb3-17a6-4e52-91af-960bf208113e', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1.23333, 41.5504, 0, 0.7, 0.366667, 0.166667, 0, 40.3933, 37.7891, 37.3382, 2.09892, 0.721678, 19, '2024-04-09 16:34:17', 1),
-('c70928a9-587d-4cd5-ac3e-414b47e5523c', 'a81c2c56-ea57-4de6-996f-09b2fc2c1f3e', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 10:33:10', 1),
-('cf305937-5474-4aee-9afd-5074e0ac74fb', '20454541-708f-4910-9774-f41923d6adb1', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 07:05:25', 1),
-('d270b167-3666-4622-9abc-601d8e633b25', '0d1c4d77-88cd-4d70-9a59-4d6be705176d', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 11:48:26', 1),
-('d3940b56-c356-4eee-9500-5453166a5bf0', 'bb3cfc7f-2be7-45df-88be-18f3c0091069', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 11:24:22', 1),
-('d9ea9958-2315-4474-bafc-a5f084733be4', '20454541-708f-4910-9774-f41923d6adb1', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 07:05:25', 1),
-('e131955c-2e57-4d95-a2ef-82edd27b1977', '34887370-f11c-4987-9a8b-95624813de93', 2.9, 25.0201, 0, 2.43333, 0.466667, 0, 0, 65.7549, 72.5264, 0, 1.70951, 0.725351, 3, '2024-05-18 07:55:11', 1),
-('e548bdb7-7ec9-4899-8b45-0831a49abb14', '0d1c4d77-88cd-4d70-9a59-4d6be705176d', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 11:48:26', 1),
-('e78c8fdc-ba89-47f9-9db5-57230a84aa6e', '34887370-f11c-4987-9a8b-95624813de93', 0.933333, 12.7545, 0.233333, 0.7, 0, 0, 60.0628, 61.1341, 0, 0, 1.10103, 0.690164, 4, '2024-05-18 07:55:11', 1),
-('f37c890e-dafe-4dd6-8110-9596e6b363c1', '2ef3b6ff-718d-49c3-9c72-87a8721e0a4f', 2, 42.2873, 0, 0, 0.966667, 1.03333, 0, 0, 77.9903, 86.8466, 3.0619, 0.670036, 1, '2024-05-18 07:42:55', 1),
-('fc09491e-33f0-4377-a375-432c6c3e990d', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 1.06667, 43.2117, 0, 0.533333, 0.3, 0.166667, 0, 67.6631, 77.8671, 87.406, 1.90239, 0.699582, 8, '2024-04-09 16:34:17', 1),
-('fc5e92a5-87f4-4b45-afa9-c4c8a5d87a22', '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 2.23333, 41.2883, 0, 0.1, 0.6, 0.433333, 0, 72.2848, 75.6743, 86.6601, 3.1917, 0.615183, 7, '2024-04-09 16:34:17', 1);
+INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`, `latitude`, `longitude`, `vendor_name`, `location`, `traffic_direction`, `media_type`, `illumination`, `width`, `height`, `quantity`, `area`, `display_cost_per_month`, `printing_rate`, `mounting_rate`, `printing_cost`, `mounting_cost`, `total_cost`, `site_image`, `map_image`, `focal_vision_duration`, `saliency_score_front`, `saliency_score_rear`, `net_saliency_score`, `duration`, `rental_per_month`, `cost_for_duration`) VALUES
+('017cdfbf-ef27-4886-bb6d-93d52ed50574', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.8, 0.68, 0.73, 0, 0, 0, 49.81, 0, 0, 0, 150.76, 0.57, 80, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('02038b22-7540-4ca8-8d95-48da6d719b8d', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 4.93, 43.08, 0, 0, 2.24, 1.83, 0, 0, 34.41, 32.19, 1.91, 0.61, 12, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('071f727a-0b47-4434-a1fb-f8041c9f88de', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.3, 42.77, 0, 0.6, 0.4, 0.3, 0, 67.53, 77.01, 87.53, 0.96, 0.72, 77, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('13080404-bd2a-4b9b-9807-f3762f83e98a', '612177b8-530a-4e86-b2cf-514cbdb6586d', 2.57, 42.48, 0, 0, 0.83, 0.97, 0, 0, 76.67, 87.26, 3.78, 0.56, 53, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('170727cc-45d3-48d6-9f2b-043e93e39447', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 3.76, 42.68, 0, 0, 2.07, 1.66, 0, 0, 33.97, 31.76, 1.21, 0.72, 1, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('1766ffe9-6d6d-447d-80a6-c7bfcf8e2905', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.07, 42.5, 0, 0.5, 0.33, 0.23, 0, 67.5, 76.96, 87.48, 1.25, 0.75, 56, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('1767155a-50a7-4337-8223-9940fa33a7fa', '612177b8-530a-4e86-b2cf-514cbdb6586d', 2.5, 40.92, 0, 0.43, 1.27, 0.8, 0, 71.43, 77.51, 86.95, 4.02, 0.66, 42, '2024-05-26 16:35:59', 1, 18.928696, 73.164801, 'name', 'Panvel Taluka, Raigad District, Maharashtra, 410222, India', 'test', 'Billboard', 'Front Lit', 100, 100, 1, 10000, NULL, 8, 8, 80000, 80000, NULL, '029fc0a5-6d15-4136-be51-dd5d2137d97arenault_billboard_images.jpg', '37eee43d-055a-4a34-b945-91d037598408map.png', NULL, NULL, NULL, NULL, 20, 50000, 33333.3),
+('19269f35-1e6f-4988-859f-88d9b67e398d', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.87, 42.73, 0, 0, 0, 0.87, 0, 0, 0, 29.97, 0.78, 0.6, 45, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('19bab475-aaf0-4b24-8b2b-cd34055ed9b0', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.07, 31.04, 0, 0, 0.07, 0, 0, 0, 30.93, 0, 1.36, 0.52, 50, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('1d5614c4-64cb-4f38-bb76-d7ee301335f9', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.4, 42.22, 0, 0.6, 0.4, 0.33, 0, 67.88, 76.8, 87.14, 1.43, 0.66, 75, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('2c245e23-9546-4ef8-b853-1a1be55eccf8', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 7.28, 44.66, 3.14, 2.38, 1.07, 0.62, 60.77, 68.6, 80.54, 90.5, 2.42, 0.7, 18, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('2e151953-7db0-4bb4-85f5-8534abe4b24d', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 0.41, 42.68, 0, 0, 0.14, 0.28, 0, 0, 79.22, 86.33, 0.34, 0.62, 21, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('2e47e8e5-7dc2-41bd-98a2-1cc84bfd38c3', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.79, 42.61, 0.38, 0.76, 0.38, 0.28, 60.64, 66.38, 76.75, 87.09, 0.62, 0.73, 4, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('38bc2fc3-a522-4b85-be53-d62ebe26f6e9', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 2.21, 42.5, 0, 1.48, 0.48, 0.21, 0, 41.33, 37.67, 37.17, 1.32, 0.68, 38, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('3d4d1b99-00dd-40b6-8504-d32bace442a1', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 5.62, 41.6, 0, 1.41, 2, 1.34, 0, 38.34, 35.64, 33.1, 1.27, 0.66, 35, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('3e0a1e9b-ee50-4072-b0dd-c85d4c2c8f3a', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.1, 35.73, 0, 0, 0.03, 0.07, 0, 0, 24.7, 22.61, 2.61, 0.62, 82, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('41950f33-a73a-4490-aa07-10c463a9759b', 'fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', 1.03, 12.75, 0.33, 0.7, 0, 0, 59.96, 61.13, 0, 0, 1.09, 0.68, 5, '2024-06-06 17:35:38', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('4ef01c32-2958-4dad-9b9e-76395d59eecd', '25de3614-826a-41c6-965f-8ad01ec7f00d', 4.37, 42.26, 0, 1.83, 1.57, 0.97, 0, 66.92, 75.98, 87.01, 2.46, 0.7, 7, '2024-06-06 17:09:43', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('59b04422-6004-46bd-9e86-992f16cdd3e0', 'fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', 4.37, 42.26, 0, 1.83, 1.57, 0.97, 0, 66.92, 75.98, 87.01, 2.46, 0.7, 2, '2024-06-06 17:35:38', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('5a7b5ab7-4172-48aa-8c6c-c9e32a22480d', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.17, 40.94, 0, 0.63, 0.37, 0.17, 0, 39.12, 35.31, 33.28, 0.83, 0.71, 74, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('5e36c8cd-3781-4fcf-a54c-cb4caba313b2', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.28, 42.31, 0, 0.69, 0.34, 0.21, 0, 66.3, 76.69, 87.58, 0.51, 0.66, 6, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('61535828-cb70-4d79-9d31-d5f6c9c4a111', '612177b8-530a-4e86-b2cf-514cbdb6586d', 6.53, 44, 0, 1.17, 3.5, 1.83, 0, 38.29, 36, 34.65, 1.92, 0.7, 55, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('6212b2df-d4fc-4da0-9726-79bc2e3014ef', '612177b8-530a-4e86-b2cf-514cbdb6586d', 2, 41.55, 0, 1.47, 0.37, 0.17, 0, 41.45, 37.79, 37.34, 1.45, 0.67, 76, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('66bf9a12-750b-4a56-8962-6be2c963041e', 'fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', 2.03, 42.59, 0, 0, 0.97, 1.07, 0, 0, 77.99, 86.99, 3.04, 0.67, 1, '2024-06-06 17:35:38', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('6e3ddba8-2aa2-4153-8c0c-7a3baafb262b', '612177b8-530a-4e86-b2cf-514cbdb6586d', 8.27, 42.92, 0, 0, 4.73, 3.07, 0, 0, 33.87, 30.67, 1.81, 0.74, 46, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('725ecfac-d4c4-4bd8-932a-7a199e7ff39d', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 0.76, 18.98, 0, 0.14, 0, 0, 0, 39.4, 0, 0, 0.64, 0.54, 30, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('74ccc3c1-3a00-4e63-b825-b15e09e45240', '612177b8-530a-4e86-b2cf-514cbdb6586d', 2.87, 33.33, 0, 1.47, 0.93, 0, 0, 69.07, 76.96, 0, 2.02, 0.58, 52, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('76322e07-6786-4920-9fed-84d3ae2d35a0', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 2.45, 42.66, 0, 0, 0.38, 1.55, 0, 0, 32.29, 31.37, 1.84, 0.6, 36, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('794112c2-fd11-4938-ac0c-b53d81c37f9c', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.77, 41.95, 0, 0.1, 0.4, 0.27, 0, 70.87, 76.46, 86.34, 0.94, 0.74, 48, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('7a24738d-72c6-478b-b066-6d1b8d0a3f81', 'ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', 3.3, 25.02, 0, 2.83, 0.47, 0, 0, 65.15, 72.53, 0, 1.63, 0.71, 14, '2024-06-06 17:12:48', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('7eb13fde-147e-4458-b4f7-7b4a1a04680c', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.4, 0.95, 0.5, 0, 0, 0, 50.21, 0, 0, 0, 146.53, 0.57, 81, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('833c534f-39d8-4f89-9af0-5257c287d6fb', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.28, 41.65, 0, 0.28, 0.48, 0.52, 0, 69.31, 76.21, 86.2, 3.55, 0.66, 24, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('845079ac-5c4d-4ed3-8717-0a69d5c1052d', '25de3614-826a-41c6-965f-8ad01ec7f00d', 3.3, 25.02, 0, 2.83, 0.47, 0, 0, 65.15, 72.53, 0, 1.63, 0.71, 9, '2024-06-06 17:09:43', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('87efb251-61b6-4ade-854c-c74f83ad7129', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.79, 20.3, 0, 1.41, 0, 0, 0, 66.7, 0, 0, 1.94, 0.65, 40, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('90db6bde-9434-45c0-b0c7-01ab010666c0', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.34, 42.6, 0, 0.72, 0.38, 0.24, 0, 66.3, 77.08, 87.46, 0.77, 0.71, 2, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('9d835e41-602a-4da9-8920-0b9576bbd2ec', '25de3614-826a-41c6-965f-8ad01ec7f00d', 2.03, 42.59, 0, 0, 0.97, 1.07, 0, 0, 77.99, 86.99, 3.04, 0.67, 6, '2024-06-06 17:09:43', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('9e27370b-965c-4b27-b309-6c923c9c9a7f', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 8.48, 42.01, 0, 2.48, 3.66, 1.66, 0, 37.99, 35.04, 32.54, 1.35, 0.73, 3, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('a2845c30-c209-46cc-bef2-c35ea4a545db', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.17, 41.93, 0, 0.37, 0.47, 0.33, 0, 69.06, 76.38, 86.67, 1.62, 0.73, 72, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('a365667d-8e93-4966-a21f-f35c39c4d98c', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 7.21, 43.36, 0, 2, 3, 1.79, 0, 38.28, 35.11, 32.73, 1.47, 0.74, 28, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('a5d157ad-81cc-4af6-b6fa-cebb386c0df4', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.2, 43.21, 0.07, 0.6, 0.3, 0.23, 62.23, 67.14, 77.87, 88.35, 1.87, 0.68, 54, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('acdef2f2-b305-4518-a574-8bebc349a86c', 'ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', 1.03, 12.75, 0.33, 0.7, 0, 0, 59.96, 61.13, 0, 0, 1.09, 0.68, 15, '2024-06-06 17:12:48', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('b26a9061-c4a3-4eb2-800c-24a76b87047e', '25de3614-826a-41c6-965f-8ad01ec7f00d', 1.03, 12.75, 0.33, 0.7, 0, 0, 59.96, 61.13, 0, 0, 1.09, 0.68, 10, '2024-06-06 17:09:43', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('b369925c-31f5-4391-84fb-35c5eef90d69', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.7, 36.17, 0, 0.23, 0.63, 0.17, 0, 67.78, 81.48, 85.01, 15.91, 0.57, 78, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('bccad289-bcf4-4315-b147-565312884ced', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.55, 42.12, 0.21, 0.72, 0.38, 0.24, 60.83, 65.86, 76.47, 86.88, 0.67, 0.72, 13, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('bee3837b-ca30-4436-8176-900ed6bc5469', '612177b8-530a-4e86-b2cf-514cbdb6586d', 6.47, 42.65, 0, 2.73, 2.1, 1.53, 0, 67.53, 76.56, 86.89, 2, 0.72, 49, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('bf07c52d-0c01-4e82-8d1c-8f94b8785215', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.37, 41.93, 0, 0, 0, 0.37, 0, 0, 0, 28.2, 1.58, 0.68, 51, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('c73797da-cccc-41ba-870f-a187d24eb8ec', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 0.1, 29.89, 0, 0, 0.1, 0, 0, 0, 34.39, 0, 0.81, 0.56, 16, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('ca6c92fe-6adb-446d-9b68-daa7cc363ada', 'ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', 2.03, 42.59, 0, 0, 0.97, 1.07, 0, 0, 77.99, 86.99, 3.04, 0.67, 11, '2024-06-06 17:12:48', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('d141c2a7-cc14-443c-bdf2-fdccbde9d64e', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 2.76, 43.17, 0, 0, 0.31, 2.17, 0, 0, 33.27, 33.32, 3.05, 0.62, 25, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('d8befd4a-78db-4ba9-a523-3aa36854eb23', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.13, 42.34, 0, 0.33, 0.47, 0.33, 0, 69.47, 76.39, 86.55, 0.88, 0.71, 73, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('e2828a10-d100-490f-a1e1-95a921411b96', '612177b8-530a-4e86-b2cf-514cbdb6586d', 2.2, 42.16, 0, 0, 0, 1.67, 0, 0, 0, 30.32, 1.22, 0.59, 47, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('e5306d52-0114-45db-9571-dbc47bfbbdd5', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 2.03, 20.52, 0, 1.24, 0, 0, 0, 68.38, 0, 0, 1.02, 0.58, 23, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('e5b697f9-5670-4f8c-9f93-9eabd5d970f6', 'fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', 3.3, 25.02, 0, 2.83, 0.47, 0, 0, 65.15, 72.53, 0, 1.63, 0.71, 4, '2024-06-06 17:35:38', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('ea2a3f34-c1a5-4e8e-ab0d-68999a3bcf94', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.87, 40.93, 0, 0.43, 0.3, 0.13, 0, 38.91, 35.17, 32.64, 1.43, 0.68, 71, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('edc82afd-a67e-4c31-a51b-a34ad8f59f83', 'f98f63e7-9eb4-4811-a258-6110d5591ece', 1.69, 42.8, 0.28, 0.79, 0.34, 0.28, 61.24, 66.58, 77.06, 87.27, 0.73, 0.73, 17, '2024-05-28 18:25:02', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('f9ed2db1-d990-4478-aab4-4bdf23d1dc3f', '612177b8-530a-4e86-b2cf-514cbdb6586d', 0.63, 36.91, 0, 0, 0, 0.27, 0, 0, 0, 30.75, 0.76, 0.52, 43, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('fb27aac5-9729-4b42-aaa5-854c063cf176', 'ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', 4.37, 42.26, 0, 1.83, 1.57, 0.97, 0, 66.92, 75.98, 87.01, 2.46, 0.7, 12, '2024-06-06 17:12:48', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
+('fea04933-f233-4a90-b981-3076b1252874', '612177b8-530a-4e86-b2cf-514cbdb6586d', 1.07, 41.69, 0, 0.37, 0.47, 0.23, 0, 69.62, 77.55, 87.38, 1.35, 0.7, 70, '2024-05-26 16:35:59', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0);
+
+--
+-- Triggers `billboards`
+--
+DELIMITER $$
+CREATE TRIGGER `calculate_area_before_insert` BEFORE INSERT ON `billboards` FOR EACH ROW BEGIN
+    SET NEW.area = NEW.width * NEW.height * NEW.quantity;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `calculate_area_before_update` BEFORE UPDATE ON `billboards` FOR EACH ROW BEGIN
+    SET NEW.area = NEW.width * NEW.height * NEW.quantity;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `calculate_total_cost_before_insert` BEFORE INSERT ON `billboards` FOR EACH ROW BEGIN
+    SET NEW.printing_cost = NEW.area * NEW.printing_rate;
+    SET NEW.mounting_cost = NEW.area * NEW.mounting_rate;
+    SET NEW.total_cost = NEW.display_cost_per_month + NEW.printing_cost + NEW.mounting_cost;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `calculate_total_cost_before_update` BEFORE UPDATE ON `billboards` FOR EACH ROW BEGIN
+    SET NEW.printing_cost = NEW.area * NEW.printing_rate;
+    SET NEW.mounting_cost = NEW.area * NEW.mounting_rate;
+    SET NEW.total_cost = NEW.display_cost_per_month + NEW.printing_cost + NEW.mounting_cost;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -150,7 +216,7 @@ CREATE TABLE `briefs` (
 --
 
 INSERT INTO `briefs` (`brief_id`, `category`, `brand_name`, `brand_logo`, `target_audience`, `campaign_obj`, `media_approach`, `is_immediate_camp`, `start_date`, `notes`, `status`, `created_at`, `created_by_user_id`) VALUES
-('2b4baa8d-4727-4679-a89f-32875e85412a', 'test', 'max life', '2b4baa8d-4727-4679-a89f-32875e85412aMax_Life_Insurance_logo.png', 'middle class', 'insurance', 'media', 0, NULL, NULL, 1, '2024-04-09 17:12:48', 34);
+('2b4baa8d-4727-4679-a89f-32875e85412a', 'test', 'max life', '2b4baa8d-4727-4679-a89f-32875e85412aMax_Life_Insurance_logo.png', 'middle class', 'insurance', 'media', 0, NULL, NULL, 0, '2024-04-09 17:12:48', 34);
 
 -- --------------------------------------------------------
 
@@ -231,13 +297,6 @@ CREATE TABLE `plans` (
   `site_image` varchar(250) NOT NULL,
   `status` int(2) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `plans`
---
-
-INSERT INTO `plans` (`plan_id`, `brief_id`, `budget_id`, `user_id`, `video_id`, `location`, `latitude`, `longitude`, `illumination`, `media_type`, `width`, `height`, `qty`, `size`, `units`, `duration`, `imp_per_month`, `rental_per_month`, `printing_rate`, `mounting_rate`, `cost_for_duration`, `printing_cost`, `mounting_cost`, `total`, `total_area`, `map_image`, `site_image`, `status`) VALUES
-('303f37bb-e6bd-471c-8f61-1e1b108f2d48', '2b4baa8d-4727-4679-a89f-32875e85412a', 'f92657bc-8f51-47f4-9b48-116af6f2b5ab', 39, '1d616347-94a1-4ac0-a672-db8f6a8a49d1', 'SH82, Panvel, Raigad, Maharashtra, 410222, India', 18.915218, 73.152751, 'Front Lit', 'Billboard', 500, 500, 5, 800, 52.000, 25.00, 21.00, 56000.00, 8.00, 5.00, 46666.67, 6400.00, 4000.00, 57066.67, 9999999.999, 'd9494d32-93af-4fe9-a1c7-c17f1edfa8a9map.png', 'ae37dd02-2583-476a-a4cb-3739c02e4337renault_images.jpeg', 1);
 
 -- --------------------------------------------------------
 
@@ -350,23 +409,21 @@ CREATE TABLE `videofiles` (
   `city_id` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_by_user_id` int(11) DEFAULT NULL,
-  `video_path` varchar(500) NOT NULL
+  `video_path` varchar(500) NOT NULL,
+  `average_speed` float DEFAULT 0,
+  `length_of_stretch` float DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `videofiles`
 --
 
-INSERT INTO `videofiles` (`video_id`, `filename`, `zone_id`, `state_id`, `city_id`, `created_at`, `created_by_user_id`, `video_path`) VALUES
-('0d1c4d77-88cd-4d70-9a59-4d6be705176d', 'temp_430f890d-ca7a-4d37-b1f0-0b5b478ce29e.mp4', 3, 11, 8, '2024-05-18 11:48:26', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/430f890d-ca7a-4d37-b1f0-0b5b478ce29e.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20240518T114826Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=a4df8bf212eda8867e4d6a7ab36ddd258a38cce5dc1a10269c5a7d74a4d51bfa'),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', '99352fca-85f6-422c-b539-bddfbccd5601.mp4', 3, 11, 8, '2024-04-09 16:34:17', 1, './instance/99352fca-85f6-422c-b539-bddfbccd5601.mp4'),
-('20454541-708f-4910-9774-f41923d6adb1', 'temp_534df968-2131-4bd6-9575-2f3c79cfd12c.mp4', 3, 11, 8, '2024-05-18 07:05:25', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/./instance/temp_534df968-2131-4bd6-9575-2f3c79cfd12c.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2'),
-('2ef3b6ff-718d-49c3-9c72-87a8721e0a4f', 'temp_300c6ce5-858e-4e8e-8f30-850f985298e1.mp4', 3, 11, 8, '2024-05-18 07:42:55', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/300c6ce5-858e-4e8e-8f30-850f985298e1.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-'),
-('34887370-f11c-4987-9a8b-95624813de93', 'temp_3486719e-83ca-4b7a-bc9b-ba01eabda113.mp4', 3, 11, 8, '2024-05-18 07:55:11', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/3486719e-83ca-4b7a-bc9b-ba01eabda113.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-'),
-('59240533-5a08-4fb8-b83e-eb42921f97e7', 'temp_fc638563-2363-43a2-8619-10e14ad101a2.mp4', 3, 11, 8, '2024-05-18 11:42:05', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/fc638563-2363-43a2-8619-10e14ad101a2.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-'),
-('69d4a243-6950-42dd-8e7c-1d45e8cef77b', 'temp_118ba213-3356-4ab4-a14c-593c22694750.mp4', 3, 11, 8, '2024-05-18 07:31:54', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/./instance/temp_118ba213-3356-4ab4-a14c-593c22694750.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2'),
-('a81c2c56-ea57-4de6-996f-09b2fc2c1f3e', 'temp_9cc3ec53-3b31-481f-919d-db7f7b849ff6.mp4', 3, 11, 8, '2024-05-18 10:33:10', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/9cc3ec53-3b31-481f-919d-db7f7b849ff6.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-'),
-('bb3cfc7f-2be7-45df-88be-18f3c0091069', 'temp_d0a6bcc7-7bd4-49a6-b824-dcbaf9f09984.mp4', 3, 11, 8, '2024-05-18 11:24:22', 1, 'https://s3.ap-south-1.amazonaws.com/loc8-tech-processed-videos/d0a6bcc7-7bd4-49a6-b824-dcbaf9f09984.mp4?response-content-type=video%2Fmp4&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIA4MTWNBTSDCCOKPGZ%2F20240518%2Fap-south-1%2Fs3%2Faws4_request&X-');
+INSERT INTO `videofiles` (`video_id`, `filename`, `zone_id`, `state_id`, `city_id`, `created_at`, `created_by_user_id`, `video_path`, `average_speed`, `length_of_stretch`) VALUES
+('25de3614-826a-41c6-965f-8ad01ec7f00d', '5strimmed_nd_d2594a.mp4', 3, 11, 8, '2024-06-06 17:09:43', 1, 'C:\\Users\\sande\\OneDrive\\Desktop\\study-material\\upload\\loc8_backend\\instance\\5strimmed_nd_d2594a.mp4', 0, 0),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', '3be712f0-dbc1-40df-8e6c-4a2b398fb394.mp4', 3, 11, 8, '2024-05-26 16:35:59', 1, 'C:\\Users\\sande\\OneDrive\\Desktop\\study-material\\upload\\loc8_backend\\instance\\3be712f0-dbc1-40df-8e6c-4a2b398fb394.mp4', 0, 0),
+('ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', '5strimmed_nd_f8441f.mp4', 3, 11, 8, '2024-06-06 17:12:48', 1, 'C:\\Users\\sande\\OneDrive\\Desktop\\study-material\\upload\\loc8_backend\\instance\\5strimmed_nd_f8441f.mp4', 0, 0),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', '5de88ccb-f698-41a2-b5cf-a533e17129fc.mp4', 3, 11, 8, '2024-05-28 18:25:02', 1, 'C:\\Users\\sande\\OneDrive\\Desktop\\study-material\\upload\\loc8_backend\\instance\\5de88ccb-f698-41a2-b5cf-a533e17129fc.mp4', 0, 0),
+('fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', '5strimmed_nd_c1e68c.mp4', 3, 11, 8, '2024-06-06 17:35:38', 1, 'C:\\Users\\sande\\OneDrive\\Desktop\\study-material\\upload\\loc8_backend\\instance\\5strimmed_nd_c1e68c.mp4', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -387,12 +444,23 @@ CREATE TABLE `video_coordinates` (
 --
 
 INSERT INTO `video_coordinates` (`video_id`, `id`, `speed`, `latitude`, `longitude`) VALUES
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 2, 80, 18.929500, 73.162400),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 3, 73, 18.927900, 73.164000),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 4, 76, 18.926600, 73.165100),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 5, 80, 18.925000, 73.166400),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 6, 75, 18.923600, 73.167900),
-('1d616347-94a1-4ac0-a672-db8f6a8a49d1', 7, 54, 18.921400, 73.170400);
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 23, 80, 18.929500, 73.162400),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 24, 73, 18.927900, 73.164000),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 25, 76, 18.926600, 73.165100),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 26, 80, 18.925000, 73.166400),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 27, 75, 18.923600, 73.167900),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 28, 70, 18.922300, 73.169400),
+('612177b8-530a-4e86-b2cf-514cbdb6586d', 29, 54, 18.921400, 73.170400),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 38, 89, 18.941700, 73.157000),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 39, 89, 18.939500, 73.157600),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 40, 89, 18.937400, 73.158200),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 41, 89, 18.935200, 73.158900),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 42, 89, 18.932900, 73.159900),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 43, 89, 18.931200, 73.161000),
+('f98f63e7-9eb4-4811-a258-6110d5591ece', 44, 80, 18.929500, 73.162400),
+('25de3614-826a-41c6-965f-8ad01ec7f00d', 47, 71, 19.018300, 73.106100),
+('ebe800b7-4ef5-4656-a315-8f9ecb5cf59d', 48, 71, 19.018300, 73.106100),
+('fc3b9d48-2862-4ff0-92e3-f8bda5b6a3d6', 49, 71, 19.018300, 73.106100);
 
 -- --------------------------------------------------------
 
@@ -567,7 +635,7 @@ ALTER TABLE `user_areas`
 -- AUTO_INCREMENT for table `video_coordinates`
 --
 ALTER TABLE `video_coordinates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=51;
 
 --
 -- AUTO_INCREMENT for table `zones`
