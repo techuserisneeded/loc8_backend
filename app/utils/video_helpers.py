@@ -163,7 +163,6 @@ def calculate_avg_speed_stretched(video_coordinates=[]):
 
     speed = 0
     for coords in video_coordinates:
-        print(coords)
         speed = speed + int(coords['speed'])
 
     if len(video_coordinates) > 0:

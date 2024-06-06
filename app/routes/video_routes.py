@@ -99,7 +99,7 @@ def get_all_videos(current_user):
         video_q = """
             SELECT 	billboards.*, 
                     videofiles.filename, videofiles.video_path, 
-                    videofiles.created_at, videofiles.created_by_user_id,
+                    videofiles.created_at, videofiles.created_by_user_id, videofiles.length_of_stretch, videofiles.average_speed,
                     states.state_name, cities.city_name, zones.zone_name
             FROM billboards
             INNER JOIN videofiles ON billboards.video_id = videofiles.video_id
@@ -114,7 +114,7 @@ def get_all_videos(current_user):
         video_q = """
         SELECT 	billboards.*, 
                     videofiles.filename, videofiles.video_path, 
-                    videofiles.created_at, videofiles.created_by_user_id,
+                    videofiles.created_at, videofiles.created_by_user_id, videofiles.length_of_stretch, videofiles.average_speed,
                     states.state_name, cities.city_name, zones.zone_name
             FROM billboards
             JOIN videofiles ON billboards.video_id = videofiles.video_id
@@ -220,6 +220,36 @@ def upload(current_user):
     """
     for coords in coordinate_tuples:
         query_db(coordinates_q, (video_id, coords[0], coords[1], coords[2]), False, True)
+
+    coordinates_q = """
+        SELECT * FROM video_coordinates
+        WHERE video_id=%s
+    """
+
+    video_coordinates = query_db(coordinates_q, (video_id,))
+
+    if not video_coordinates:
+        video_coordinates = []
+
+    avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
+
+    query = """
+        UPDATE videofiles
+        SET
+            average_speed=%s, 
+            length_of_stretch=%s
+        WHERE
+            video_id=%s
+    """
+
+    args = (
+        avg_speed_km,
+        stretched_in_meters,
+        video_id
+    )
+
+    query_db(query, args, True, True)
+
 
     bill_q = "SELECT * FROM billboards WHERE video_id = %s";
     billboards = query_db(bill_q, (video_id,))
@@ -369,6 +399,96 @@ def merge_billborads(current_user):
     query_db(query_delete_previous_rows, tuple(billboard_ids), False, True)
 
     return jsonify({"message": "Merge successful"}), 200
+
+
+@video_bp.route('/billboards/asset-info/<billboard_id>', methods=['PUT'])
+@token_required
+def add_asset_info(current_user, billboard_id):
+
+    current_user_id = current_user['id']
+
+    data = request.form
+
+    if 'map_image' not in request.files:
+        return jsonify({'message': 'Map Image Is Required!'}), 400
+    
+    if 'site_image' not in request.files:
+        return jsonify({'message': 'Site Image Is Required!'}), 400
+
+    map_image_file = request.files['map_image']
+    site_image_file = request.files['site_image']
+
+    if map_image_file.filename == '':
+        return jsonify({'message': 'Map Image Is Required!'}), 400
+    
+    if site_image_file.filename == '':
+        return jsonify({'message': 'Site Image Is Required!'}), 400
+
+    #data
+    media_type = data['media_type']
+    illumination = data['illumination']
+    vendor_name = data['vendor_name']
+    traffic_direction = data['traffic_direction']
+
+    location = data['location']
+    latitude = float(data['latitude'])
+    longitude = float(data['longitude'])
+
+    duration = float(data['duration'])
+    mounting_rate = float(data['mounting'])
+    printing_rate = float(data['printing'])
+    rental_per_month = float(data['rental_per_month'])
+
+    height = float(data['h'])
+    width = float(data['w'])
+    qty = int(data['qty'])
+
+    cost_for_duration = (rental_per_month * duration) / 30
+
+    map_img_filename = generate_uuid() + secure_filename(map_image_file.filename)
+    site_img_filename = generate_uuid() + secure_filename(site_image_file.filename)
+
+    query = """
+        UPDATE billboards
+        SET
+            location=%s, 
+            latitude=%s, 
+            longitude=%s, 
+            illumination=%s, 
+            media_type=%s, 
+            width=%s, 
+            height=%s, 
+            quantity=%s, 
+            duration=%s, 
+            rental_per_month=%s, 
+            printing_rate=%s,
+            mounting_rate=%s, 
+            cost_for_duration=%s, 
+            map_image=%s, 
+            site_image=%s,
+            vendor_name=%s,
+            traffic_direction=%s
+        WHERE
+            id=%s
+    """
+
+    args = (
+        location, latitude, longitude,
+        illumination, media_type, width,
+        height, qty, 
+        duration, rental_per_month, 
+        printing_rate, mounting_rate, cost_for_duration,
+        map_img_filename, site_img_filename, vendor_name,
+        traffic_direction, billboard_id
+    )
+
+    query_db(query, args, True, True)
+
+    map_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
+    site_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], site_img_filename))
+
+    return jsonify({'message': 'Plan added successfully'}), 201
+
 
 
 @video_bp.route('/billboards/delete', methods=['POST'])

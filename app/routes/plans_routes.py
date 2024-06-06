@@ -57,12 +57,7 @@ def add_plan(current_user):
     budget_id = data['budget_id']
     video_id = data['video_id']
 
-    printing_cost = size * printing_rate
-    mounting_cost = size * mounting_rate
     cost_for_duration = (rental_per_month * duration) / 30
-
-    total = cost_for_duration + printing_cost + mounting_cost
-    total_area = width * height * units
 
     plan_id = generate_uuid()
 
@@ -70,27 +65,28 @@ def add_plan(current_user):
     site_img_filename = generate_uuid() + secure_filename(site_image_file.filename)
 
     query = """
-        INSERT INTO plans (
-            plan_id, brief_id, budget_id, 
-            user_id, video_id, location, 
-            latitude, longitude, illumination, 
-            media_type, width, height, 
-            qty, size, units, 
-            duration, imp_per_month, rental_per_month, 
-            printing_rate, mounting_rate, cost_for_duration, 
-            printing_cost, mounting_cost, total, 
-            total_area, map_image, site_image
-        ) VALUES (
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s,
-            %s, %s, %s
-        )
+        UPDATE billboards
+        SET
+            location=%s, 
+            latitude=%s, 
+            longitude=%s, 
+            illumination=%s, 
+            media_type=%s, 
+            width=%s, 
+            height=%s, 
+            quantity=%s, 
+            size=%s, 
+            units=%s, 
+            duration=%s, 
+            imp_per_month=%s, 
+            rental_per_month=%s, 
+            printing_rate=%s, 
+            mounting_rate=%s, 
+            cost_for_duration=%s, 
+            map_image=%s, 
+            site_image=%s
+        WHERE
+            id=%s
     """
 
     args = (
@@ -101,8 +97,7 @@ def add_plan(current_user):
         qty, size, units, 
         duration, imp_per_month, rental_per_month, 
         printing_rate, mounting_rate, cost_for_duration, 
-        printing_cost, mounting_cost, total, 
-        total_area, map_img_filename, site_img_filename
+        map_img_filename, site_img_filename, billboard_id
     )
 
     query_db(query, args, True, True)
