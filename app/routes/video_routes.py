@@ -338,7 +338,7 @@ def delete_video(current_user, video_id):
             q = "DELETE FROM videofiles WHERE video_id=%s"
             query_db(q, (video_id,))
 
-            if not is_prod():
+            if not is_prod() and os.path.exists(video_details['video_path']):
                 os.remove(video_details['video_path'])
             else:
                 delete_obj(object_name=video_details['filename'])
