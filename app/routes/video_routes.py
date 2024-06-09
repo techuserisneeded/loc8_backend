@@ -409,21 +409,6 @@ def add_asset_info(current_user, billboard_id):
 
     data = request.form
 
-    if 'map_image' not in request.files:
-        return jsonify({'message': 'Map Image Is Required!'}), 400
-    
-    if 'site_image' not in request.files:
-        return jsonify({'message': 'Site Image Is Required!'}), 400
-
-    map_image_file = request.files['map_image']
-    site_image_file = request.files['site_image']
-
-    if map_image_file.filename == '':
-        return jsonify({'message': 'Map Image Is Required!'}), 400
-    
-    if site_image_file.filename == '':
-        return jsonify({'message': 'Site Image Is Required!'}), 400
-
     #data
     media_type = data['media_type']
     illumination = data['illumination']
@@ -445,8 +430,18 @@ def add_asset_info(current_user, billboard_id):
 
     cost_for_duration = (rental_per_month * duration) / 30
 
-    map_img_filename = generate_uuid() + secure_filename(map_image_file.filename)
-    site_img_filename = generate_uuid() + secure_filename(site_image_file.filename)
+    map_img_filename = None
+    site_img_filename = None
+
+    if 'map_image' in request.files:
+        map_image_file = request.files['map_image']
+        if map_image_file.filename != '':
+            map_img_filename = generate_uuid() + secure_filename(map_image_file.filename)
+
+    if 'site_image' in request.files:
+        site_image_file = request.files['map_image']
+        if site_image_file.filename != '':
+            site_img_filename = generate_uuid() + secure_filename(site_image_file.filename)
 
     query = """
         UPDATE billboards
@@ -484,8 +479,11 @@ def add_asset_info(current_user, billboard_id):
 
     query_db(query, args, True, True)
 
-    map_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
-    site_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], site_img_filename))
+    if(map_img_filename):
+        map_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
+    
+    if(site_img_filename):
+        site_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], site_img_filename))
 
     return jsonify({'message': 'Plan added successfully'}), 201
 
