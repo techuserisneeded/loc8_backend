@@ -420,13 +420,13 @@ def add_asset_info(current_user, billboard_id):
     longitude = float(data['longitude'])
 
     duration = float(data['duration'])
-    mounting_rate = float(data['mounting'])
-    printing_rate = float(data['printing'])
+    mounting_rate = float(data['mounting_rate'])
+    printing_rate = float(data['printing_rate'])
     rental_per_month = float(data['rental_per_month'])
 
-    height = float(data['h'])
-    width = float(data['w'])
-    qty = int(data['qty'])
+    height = float(data['height'])
+    width = float(data['width'])
+    qty = int(data['quantity'])
 
     cost_for_duration = (rental_per_month * duration) / 30
 
@@ -488,6 +488,32 @@ def add_asset_info(current_user, billboard_id):
     return jsonify({'message': 'Plan added successfully'}), 201
 
 
+@video_bp.route('/billboards/asset-info/<billboard_id>', methods=['GET'])
+@token_required
+def get_asset_info(current_user, billboard_id):
+    q = """
+        SELECT * FROM billboards WHERE id=%s
+    """
+
+    billboard = query_db(q, (billboard_id,), True)
+
+    if billboard == None:
+        return jsonify(""), 200
+    
+    q = """
+        SELECT * FROM video_coordinates WHERE video_id=%s
+    """
+    
+    video_coordinates = query_db(q, (billboard['video_id'],))
+
+    q = """
+        SELECT * FROM videofiles WHERE video_id=%s
+    """
+    
+    video = query_db(q, (billboard['video_id'],), True)
+
+    return jsonify({"asset" : billboard, "video_coordinates" : video_coordinates, "video": video}), 200
+    
 
 @video_bp.route('/billboards/delete', methods=['POST'])
 @token_required
