@@ -130,29 +130,29 @@ def get_all_videos(current_user):
     if not video_details:
         video_details = []
 
-    for billboard_details in video_details:
+    # for billboard_details in video_details:
 
-        video_id = billboard_details['video_id']
+    #     video_id = billboard_details['video_id']
 
-        if video_id not in coordinates_by_video:
-            video_coordinates = query_db("""
-                        SELECT * FROM video_coordinates WHERE video_id=%s
-                """, (billboard_details['video_id'],))
-            coordinates_by_video[video_id] = video_coordinates
+    #     if video_id not in coordinates_by_video:
+    #         video_coordinates = query_db("""
+    #                     SELECT * FROM video_coordinates WHERE video_id=%s
+    #             """, (billboard_details['video_id'],))
+    #         coordinates_by_video[video_id] = video_coordinates
 
-        if coordinates_by_video[video_id]:
-            for idx, coords in enumerate(coordinates_by_video[video_id]):
-                billboard_details['latitude' + str(idx)] = coords['latitude']
-                billboard_details['longitude'+ str(idx)] = coords['longitude']
-                billboard_details['speed'+ str(idx)] = coords['speed']
+    #     if coordinates_by_video[video_id]:
+    #         for idx, coords in enumerate(coordinates_by_video[video_id]):
+    #             billboard_details['latitude' + str(idx)] = coords['latitude']
+    #             billboard_details['longitude'+ str(idx)] = coords['longitude']
+    #             billboard_details['speed'+ str(idx)] = coords['speed']
 
-        else:
-            for idx in range(7):
-                billboard_details['latitude' + str(idx)] = 0
-                billboard_details['longitude'+ str(idx)] = 0
-                billboard_details['speed'+ str(idx)] = 0
+    #     else:
+    #         for idx in range(7):
+    #             billboard_details['latitude' + str(idx)] = 0
+    #             billboard_details['longitude'+ str(idx)] = 0
+    #             billboard_details['speed'+ str(idx)] = 0
 
-            response.append(billboard_details)
+    #         response.append(billboard_details)
 
     
     return jsonify(video_details), 200
@@ -372,15 +372,15 @@ def merge_billborads(current_user):
             %s,
             video_id,
             SUM(visibility_duration) AS visibility_duration_sum,
-            SUM(distance_to_center) AS distance_to_center_sum,
+            AVG(distance_to_center) AS distance_to_center_sum,
             SUM(central_duration) AS central_duration_sum,
             SUM(near_p_duration) AS near_p_duration_sum,
             SUM(mid_p_duration) AS mid_p_duration_sum,
             SUM(far_p_duration) AS far_p_duration_sum,
-            SUM(central_distance) AS central_distance_sum,
-            SUM(near_p_distance) AS near_p_distance_sum,
-            SUM(mid_p_distance) AS mid_p_distance_sum,
-            SUM(far_p_distance) AS far_p_distance_sum,
+            AVG(central_distance) AS central_distance_sum,
+            AVG(near_p_distance) AS near_p_distance_sum,
+            AVG(mid_p_distance) AS mid_p_distance_sum,
+            AVG(far_p_distance) AS far_p_distance_sum,
             AVG(average_areas) AS average_areas_avg,
             AVG(confidence) AS confidence_avg,
             MAX(tracker_id) AS tracker_id,
