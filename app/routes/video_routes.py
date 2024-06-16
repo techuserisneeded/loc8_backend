@@ -358,48 +358,66 @@ def delete_video(current_user, video_id):
 def merge_billborads(current_user):
     data = request.get_json()
     billboard_ids = data.get('billboard_ids', [])
+    selected_id = data.get('selected_id', "")
 
     if not billboard_ids:
         return jsonify({"error": "No billboard IDs provided"}), 400
     
-    new_billboard_id = generate_uuid()
+    if not selected_id:
+        return jsonify({"error": "No selected id was provided"}), 400
+    
+    if selected_id not in billboard_ids:
+        return jsonify({"error": "Selected ID must be one of the billboard IDs"}), 400
 
-    query_merge_sum_average = f"""
-        INSERT INTO billboards (id, video_id, visibility_duration, distance_to_center, central_duration, near_p_duration, 
-                                mid_p_duration, far_p_duration, central_distance, near_p_distance, mid_p_distance, 
-                                far_p_distance, average_areas, confidence, tracker_id, created_by_user_id)
+    query_create_temp_table = f"""
+        CREATE TEMPORARY TABLE temp_billboard_aggregate AS
         SELECT
-            %s,
-            video_id,
             SUM(visibility_duration) AS visibility_duration_sum,
-            AVG(distance_to_center) AS distance_to_center_sum,
+            AVG(distance_to_center) AS distance_to_center_avg,
             SUM(central_duration) AS central_duration_sum,
             SUM(near_p_duration) AS near_p_duration_sum,
             SUM(mid_p_duration) AS mid_p_duration_sum,
             SUM(far_p_duration) AS far_p_duration_sum,
-            AVG(central_distance) AS central_distance_sum,
-            AVG(near_p_distance) AS near_p_distance_sum,
-            AVG(mid_p_distance) AS mid_p_distance_sum,
-            AVG(far_p_distance) AS far_p_distance_sum,
+            AVG(central_distance) AS central_distance_avg,
+            AVG(near_p_distance) AS near_p_distance_avg,
+            AVG(mid_p_distance) AS mid_p_distance_avg,
+            AVG(far_p_distance) AS far_p_distance_avg,
             AVG(average_areas) AS average_areas_avg,
             AVG(confidence) AS confidence_avg,
-            MAX(tracker_id) AS tracker_id,
-            created_by_user_id
+            MAX(tracker_id) AS tracker_id
         FROM billboards
         WHERE id IN ({','.join(['%s']*len(billboard_ids))})
-        GROUP BY video_id, created_by_user_id
     """
+    query_db(query_create_temp_table, tuple(billboard_ids), False, True)
 
-    query_db(query_merge_sum_average, (new_billboard_id, *billboard_ids), False, True)
+    query_update_selected = """
+        UPDATE billboards
+        JOIN temp_billboard_aggregate ON TRUE
+        SET
+            billboards.visibility_duration = temp_billboard_aggregate.visibility_duration_sum,
+            billboards.distance_to_center = temp_billboard_aggregate.distance_to_center_avg,
+            billboards.central_duration = temp_billboard_aggregate.central_duration_sum,
+            billboards.near_p_duration = temp_billboard_aggregate.near_p_duration_sum,
+            billboards.mid_p_duration = temp_billboard_aggregate.mid_p_duration_sum,
+            billboards.far_p_duration = temp_billboard_aggregate.far_p_duration_sum,
+            billboards.central_distance = temp_billboard_aggregate.central_distance_avg,
+            billboards.near_p_distance = temp_billboard_aggregate.near_p_distance_avg,
+            billboards.mid_p_distance = temp_billboard_aggregate.mid_p_distance_avg,
+            billboards.far_p_distance = temp_billboard_aggregate.far_p_distance_avg,
+            billboards.average_areas = temp_billboard_aggregate.average_areas_avg,
+            billboards.confidence = temp_billboard_aggregate.confidence_avg,
+            billboards.tracker_id = temp_billboard_aggregate.tracker_id
+        WHERE billboards.id = %s
+    """
+    query_db(query_update_selected, (selected_id,), False, True)
 
     query_delete_previous_rows = f"""
         DELETE FROM billboards
-        WHERE id IN ({','.join(['%s']*len(billboard_ids))})
+        WHERE id IN ({','.join(['%s']*len(billboard_ids))}) AND id != %s
     """
-    query_db(query_delete_previous_rows, tuple(billboard_ids), False, True)
+    query_db(query_delete_previous_rows, (*billboard_ids, selected_id), False, True)
 
     return jsonify({"message": "Merge successful"}), 200
-
 
 @video_bp.route('/billboards/asset-info/<billboard_id>', methods=['PUT'])
 @token_required
