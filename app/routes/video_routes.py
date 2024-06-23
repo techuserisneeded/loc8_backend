@@ -600,3 +600,5 @@ def insert_billboard_data(video_id, user_id, billboard_data):
             user_id
         )
         query_db(billboard_query, billboard_args, False, True)
+
+
