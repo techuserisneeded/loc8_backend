@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 12, 2024 at 09:49 PM
+-- Generation Time: Jun 24, 2024 at 09:06 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -84,10 +84,10 @@ CREATE TABLE `billboards` (
   `total_cost` float DEFAULT 0,
   `site_image` varchar(255) DEFAULT NULL,
   `map_image` varchar(255) DEFAULT NULL,
-  `focal_vision_duration` int(11) DEFAULT NULL,
-  `saliency_score_front` int(11) DEFAULT NULL,
-  `saliency_score_rear` int(11) DEFAULT NULL,
-  `net_saliency_score` int(11) DEFAULT NULL,
+  `focal_vision_duration` float DEFAULT 0,
+  `saliency_score_front_city` float DEFAULT NULL,
+  `saliency_score_rear_city` float DEFAULT 0,
+  `net_saliency_score_city` float DEFAULT 0,
   `duration` int(11) DEFAULT 0,
   `rental_per_month` float DEFAULT 0,
   `cost_for_duration` float DEFAULT 0
@@ -97,16 +97,16 @@ CREATE TABLE `billboards` (
 -- Dumping data for table `billboards`
 --
 
-INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`, `latitude`, `longitude`, `vendor_name`, `location`, `traffic_direction`, `media_type`, `illumination`, `width`, `height`, `quantity`, `area`, `display_cost_per_month`, `printing_rate`, `mounting_rate`, `printing_cost`, `mounting_cost`, `total_cost`, `site_image`, `map_image`, `focal_vision_duration`, `saliency_score_front`, `saliency_score_rear`, `net_saliency_score`, `duration`, `rental_per_month`, `cost_for_duration`) VALUES
-('22a83f6b-48fd-404f-baa7-f2a54189bb9b', 'a48252b1-5961-42f8-a887-f358df838e62', 2.38, 42.7, 0.62, 0.93, 0.48, 0.34, 60.19, 66.38, 76.84, 87.03, 0.61, 0.76, 7, '2024-06-08 06:10:08', 1, 18.900602, 73.201966, 'max', 'Vishwadeep Housing Society, Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'right', 'media', 'backlit', 500, 500, 5, 1250000, 0, 8, 8, 10000000, 10000000, 20000000, NULL, NULL, NULL, NULL, NULL, NULL, 50, 65000, 108333),
-('2af06afe-153e-4eb0-b7da-8230890b895e', 'a48252b1-5961-42f8-a887-f358df838e62', 1.76, 43.53, 0.21, 0.79, 0.41, 0.31, 61.48, 66.86, 77.64, 88.68, 1.45, 0.64, 12, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('35afb8f9-5026-4467-a29d-08b0831f6307', 'a48252b1-5961-42f8-a887-f358df838e62', 0.31, 31.18, 0, 0, 0.31, 0, 0, 0, 77.29, 0, 0.31, 0.56, 10, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('530b715d-1472-4b87-bdbc-037b0ccb650c', 'a48252b1-5961-42f8-a887-f358df838e62', 8.17, 43.95, 0, 3.1, 2.69, 2, 0, 39, 35.88, 34.37, 1.64, 0.7, 35, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('59f557a9-968f-494b-9992-f8333242e315', 'a48252b1-5961-42f8-a887-f358df838e62', 0.24, 41.36, 0, 0, 0.1, 0.14, 0, 0, 32.58, 30.77, 1.02, 0.69, 14, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('773f4cf1-be31-4350-b349-1dafba896dfd', 'a48252b1-5961-42f8-a887-f358df838e62', 1.55, 42.5, 0, 0.72, 0.48, 0.31, 0, 67.35, 76.91, 87.04, 0.58, 0.75, 9, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('af801ffe-1b06-4b97-8742-b1430d690c18', 'a48252b1-5961-42f8-a887-f358df838e62', 0.59, 35.45, 0, 0.1, 0.38, 0.07, 0, 71.7, 77.62, 83.94, 0.37, 0.54, 8, '2024-06-08 06:10:08', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0),
-('c4a40bb5-95b0-4110-9d00-b3e1981b741d', 'a48252b1-5961-42f8-a887-f358df838e62', 13.48, 46.76, 7.17, 2.76, 1.9, 1.38, 57.21, 70.15, 81.51, 92.43, 2.34, 0.69, 6, '2024-06-08 06:10:08', 1, 18.899417, 73.203320, 'Max', 'Mumbai - Pune Expressway, Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'straight', 'billboard', 'front lit', 200, 200, 15, 600000, 0, 8, 8, 4800000, 4800000, 9600000, NULL, NULL, NULL, NULL, NULL, NULL, 20, 50000, 33333.3),
-('d24367f3-a8a1-4e84-ab23-dbcf237ac058', 'a48252b1-5961-42f8-a887-f358df838e62', 3.24, 19.75, 2.1, 0, 0, 0, 51.02, 0, 0, 0, 9.82, 0.54, 11, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0);
+INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`, `latitude`, `longitude`, `vendor_name`, `location`, `traffic_direction`, `media_type`, `illumination`, `width`, `height`, `quantity`, `area`, `display_cost_per_month`, `printing_rate`, `mounting_rate`, `printing_cost`, `mounting_cost`, `total_cost`, `site_image`, `map_image`, `focal_vision_duration`, `saliency_score_front_city`, `saliency_score_rear_city`, `net_saliency_score_city`, `duration`, `rental_per_month`, `cost_for_duration`) VALUES
+('22a83f6b-48fd-404f-baa7-f2a54189bb9b', 'a48252b1-5961-42f8-a887-f358df838e62', 2.38, 42.7, 0.62, 0.93, 0.48, 0.34, 60.19, 66.38, 76.84, 87.03, 0.61, 0.76, 7, '2024-06-08 06:10:08', 1, 18.900602, 73.201966, 'max', 'Vishwadeep Housing Society, Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'right', 'media', 'backlit', 500, 500, 5, 1250000, 0, 8, 8, 10000000, 10000000, 20000000, NULL, NULL, 0, 0.26986, 0.270165, 0.270012, 50, 65000, 108333),
+('2af06afe-153e-4eb0-b7da-8230890b895e', 'a48252b1-5961-42f8-a887-f358df838e62', 1.76, 43.53, 0.21, 0.79, 0.41, 0.31, 61.48, 66.86, 77.64, 88.68, 1.45, 0.64, 12, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.267997, 0.268722, 0.268359, 0, 0, 0),
+('35afb8f9-5026-4467-a29d-08b0831f6307', 'a48252b1-5961-42f8-a887-f358df838e62', 0.31, 31.18, 0, 0, 0.31, 0, 0, 0, 77.29, 0, 0.31, 0.56, 10, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.314017, 0.314172, 0.314094, 0, 0, 0),
+('530b715d-1472-4b87-bdbc-037b0ccb650c', 'a48252b1-5961-42f8-a887-f358df838e62', 8.17, 43.95, 0, 3.1, 2.69, 2, 0, 39, 35.88, 34.37, 1.64, 0.7, 35, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.272059, 0.272879, 0.272469, 0, 0, 0),
+('59f557a9-968f-494b-9992-f8333242e315', 'a48252b1-5961-42f8-a887-f358df838e62', 0.24, 41.36, 0, 0, 0.1, 0.14, 0, 0, 32.58, 30.77, 1.02, 0.69, 14, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.274629, 0.275139, 0.274884, 0, 0, 0),
+('773f4cf1-be31-4350-b349-1dafba896dfd', 'a48252b1-5961-42f8-a887-f358df838e62', 1.55, 42.5, 0, 0.72, 0.48, 0.31, 0, 67.35, 76.91, 87.04, 0.58, 0.75, 9, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.270362, 0.270652, 0.270507, 0, 0, 0),
+('af801ffe-1b06-4b97-8742-b1430d690c18', 'a48252b1-5961-42f8-a887-f358df838e62', 0.59, 35.45, 0, 0.1, 0.38, 0.07, 0, 71.7, 77.62, 83.94, 0.37, 0.54, 8, '2024-06-08 06:10:08', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.297263, 0.297448, 0.297355, 0, 0, 0),
+('c4a40bb5-95b0-4110-9d00-b3e1981b741d', 'a48252b1-5961-42f8-a887-f358df838e62', 13.48, 46.76, 7.17, 2.76, 1.9, 1.38, 57.21, 70.15, 81.51, 92.43, 2.34, 0.69, 6, '2024-06-08 06:10:08', 1, 18.899417, 73.203320, 'Max', 'Mumbai - Pune Expressway, Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'straight', 'billboard', 'front lit', 200, 200, 15, 600000, 0, 8, 8, 4800000, 4800000, 9600000, NULL, NULL, 0, 0.260819, 0.261989, 0.261404, 20, 50000, 33333.3),
+('d24367f3-a8a1-4e84-ab23-dbcf237ac058', 'a48252b1-5961-42f8-a887-f358df838e62', 3.24, 19.75, 2.1, 0, 0, 0, 51.02, 0, 0, 0, 9.82, 0.54, 11, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 0.378498, 0.383408, 0.380953, 0, 0, 0);
 
 --
 -- Triggers `billboards`
@@ -572,7 +572,7 @@ ALTER TABLE `user_areas`
 -- AUTO_INCREMENT for table `video_coordinates`
 --
 ALTER TABLE `video_coordinates`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=59;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- AUTO_INCREMENT for table `zones`
