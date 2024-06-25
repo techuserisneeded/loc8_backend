@@ -22,5 +22,5 @@ def calculate_far_p_duration(far_p_duration, weightings):
 def calculate_saliency(total):
     return total / 100
 
-def calculate_net_saliency(saliency_front, saliency_rear):
-    return (saliency_front + saliency_rear) / 2
+def calculate_net_saliency(saliency_front, weight_front, saliency_rear, weight_rear):
+    return ((saliency_front*weight_front) + (saliency_rear * weight_rear)) /100

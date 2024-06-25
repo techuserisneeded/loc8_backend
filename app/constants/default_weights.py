@@ -6,6 +6,7 @@ default_weights_front = {
     "mid_p_duration": 5,
     "far_p_duration": 3.75,
     "average_speed": 10,
+    "saliency": 80
 }
 
 default_weights_rear = {
@@ -16,4 +17,5 @@ default_weights_rear = {
     "mid_p_duration": 5,
     "far_p_duration": 3.75,
     "average_speed": 10,
+    "saliency": 20
 }
