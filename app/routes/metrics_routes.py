@@ -14,6 +14,35 @@ from app.constants.default_weights import default_weights_front, default_weights
 
 metrics_bp = Blueprint('metrics', __name__)
 
+@metrics_bp.route('/efficiency', methods=['POST'])
+@token_required
+def calculate_efficiency(current_user):
+
+    billoards_q = """
+            SELECT b.net_saliency_score_city, b.rental_per_month, b.id
+            FROM billboards as b 
+    """
+    billboards = query_db(billoards_q)
+
+    query_db("START TRANSACTION")
+
+    for bill in billboards:
+        bill_id = bill.get("id")
+        efficiency = metrics.calculate_efficiency(bill.get("net_saliency_score_city"), bill.get("rental_per_month"))
+        q = """
+            UPDATE billboards 
+            SET 
+                efficiency = %s
+            WHERE 
+            id = %s
+        """
+        query_db(q, (efficiency, bill_id))
+    query_db("COMMIT")
+
+    return jsonify({'message': 'Efficiency calculated successfully'}), 201
+
+
+
 @metrics_bp.route('/saliency', methods=['POST'])
 @token_required
 def calculate_saliency(current_user):
@@ -62,7 +91,6 @@ def calculate_saliency(current_user):
     query_db("START TRANSACTION")
 
     for bill in billboards:
-
         bill_id = bill.get("id")
 
         distance_to_center_front = metrics.calculate_distance_to_center(bill.get("distance_to_center"), weights_front.get("distance_to_center"))
@@ -111,4 +139,50 @@ def calculate_saliency(current_user):
 
     query_db("COMMIT")
 
+    billoards_q =   '''
+        SET @rank = 0;
+        CREATE TEMPORARY TABLE temp_ranking AS
+        SELECT b.id, (@rank := @rank + 1) AS rank
+        FROM billboards b
+        JOIN videofiles v ON b.video_id = v.video_id
+        WHERE v.city_id = %s
+        ORDER BY b.net_saliency_score_city DESC;
+'''
+    query_db(billoards_q, (city_id,))
+    show_temp_table_q = '''
+            SHOW TABLES LIKE 'temp_ranking';
+        '''
+    result = query_db(show_temp_table_q)
+
+    if result:
+            # Temporary table exists, fetch and print its contents
+        fetch_temp_table_q = '''
+                SELECT * FROM temp_ranking;
+            '''
+        temp_results = query_db(fetch_temp_table_q)
+
+            # Print or process the results
+        print("Contents of temp_ranking:")
+        for row in temp_results:
+                print(row)  # Print each row to console for inspection
+
+    else:
+        print("Temporary table temp_ranking does not exist.")
+
+    billoards_q = '''UPDATE billboards b
+    JOIN temp_ranking tr ON b.id = tr.id
+    SET b.Rank_net_saliency_citywise = tr.rank;
+    DROP TEMPORARY TABLE IF EXISTS temp_ranking;'''
+    query_db(billoards_q, ())
+
+    
+    query_db("COMMIT")
+
+
+
     return jsonify({'message': 'Saliency calculated successfully'}), 201
+
+
+
+
+    

@@ -25,3 +25,9 @@ def calculate_saliency(total):
 
 def calculate_net_saliency(saliency_front, saliency_rear):
     return (saliency_front + saliency_rear) / 2
+
+def calculate_efficiency(saliency, rental_per_month):
+    if rental_per_month == 0:
+        return 0
+    else:
+       return (saliency/rental_per_month)
