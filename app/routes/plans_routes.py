@@ -172,14 +172,17 @@ def get_media_data(current_user):
     city_id = data.get("city_id")
     state_id = data.get("state_id")
     zone_id = data.get("zone_id")
+    visibility_duration_min = data.get("visibility_duration_min", 0) or 0
+    visibility_duration_max = data.get("visibility_duration_max", 99999) or 99999
 
     q = """
         SELECT b.* FROM videofiles as v 
         INNER JOIN billboards b ON b.video_id=v.video_id
-        WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s 
+        WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s
+        AND visibility_duration>=%s AND visibility_duration<=%s
     """
 
-    values = (zone_id, state_id, city_id)
+    values = (zone_id, state_id, city_id, visibility_duration_min, visibility_duration_max)
 
     billboards = query_db(q, values)
 
