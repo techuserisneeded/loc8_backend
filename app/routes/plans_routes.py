@@ -7,6 +7,7 @@ from app.utils.helpers import clean_and_lower, generate_bcrypt_hash, generate_uu
 from app.constants.roles import roles
 from app.services.users import is_user_email_exits, is_emp_id_exits
 from app.services.user_areas import insert_user_areas
+from app.utils.helpers import generate_uuid
 
 plans_bp = Blueprint('plans', __name__)
 
@@ -122,9 +123,74 @@ def delete_plan_by_id(current_user, plan_id):
     return jsonify({'message': 'Plan deleted succesfully!'}), 200
 
 
-# // 1) Mounting Rate
-# // 2) Printing Rate
-# // 3) Mounting Cost
-# // 4) Printing Cost
-# // 5) Total Cost (Display Cost of Duration + Printing Cost + Mounting Cost)
-# // 6) Total Area = W*H*Units
+@plans_bp.route('/plans/assets', methods=['POST'])
+@token_required
+def add_array_to_plan(current_user):
+
+    current_user_id = current_user['id']
+
+    data = request.get_json()
+
+    billboards = data.get("billboards")
+    budget_id = data.get("budget_id")
+    brief_id = data.get("brief_id")
+    video_id = data.get("video_id")
+    
+    try:
+        query_db("START TRANSACTION")
+
+        for bill_id in billboards:
+
+            plan_id = generate_uuid()
+
+            q = """
+                INSERT INTO plans (plan_id, brief_id, budget_id, user_id, video_id, billboard_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """
+
+            v = (plan_id, brief_id, budget_id, current_user_id, video_id, bill_id)
+
+            query_db(q, v)
+
+            query_db("COMMIT")
+
+        return jsonify({'message': 'Plan added successfully'}), 201
+        
+    except Exception as e:
+        print(str(e))
+        query_db("ROLLBACK")
+
+        return jsonify({'message': 'something went wrong!'}), 500
+
+
+@plans_bp.route('/plans/media', methods=['GET'])
+@token_required
+def get_media_data(current_user):
+
+    data = request.args
+
+    city_id = data.get("city_id")
+    state_id = data.get("state_id")
+    zone_id = data.get("zone_id")
+
+    q = """
+        SELECT b.* FROM videofiles as v 
+        INNER JOIN billboards b ON b.video_id=v.video_id
+        WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s 
+    """
+
+    values = (zone_id, state_id, city_id)
+
+    billboards = query_db(q, values)
+
+    return jsonify(billboards), 200
+
+
+    
+   
+
+
+
+    
+
+

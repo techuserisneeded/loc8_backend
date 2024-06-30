@@ -129,23 +129,27 @@ def getBriefs(current_user):
 
         if current_user['role_id'] == roles.get("SUPERADMIN"):
             query = """
-            SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget
+            SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget,
+            users.first_name, users.last_name
             FROM briefs b
             INNER JOIN brief_budgets bb ON b.brief_id = bb.brief_id
             INNER JOIN zones ON bb.zone_id = zones.zone_id
             INNER JOIN states ON bb.state_id = states.state_id
             INNER JOIN cities ON bb.city_id = cities.city_id
+            INNER JOIN users ON b.created_by_user_id = users.id
         """
             
         else:
 
             query = """
-                SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget
+                SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget,
+                users.first_name, users.last_name
                 FROM briefs b
                 INNER JOIN brief_budgets bb ON b.brief_id = bb.brief_id
                 INNER JOIN zones ON bb.zone_id = zones.zone_id
                 INNER JOIN states ON bb.state_id = states.state_id
                 INNER JOIN cities ON bb.city_id = cities.city_id
+                INNER JOIN users ON b.created_by_user_id = users.id
                 WHERE b.created_by_user_id = %s
             """
 
@@ -256,12 +260,15 @@ def getPlannerBriefs(current_user):
     user_id = current_user['id']
 
     assigned_brief_q = """
-        SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget FROM assigned_budgets ab
+        SELECT b.*, bb.budget_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget,
+        users.first_name, users.last_name
+        FROM assigned_budgets ab
         INNER JOIN brief_budgets bb ON ab.budget_id = bb.budget_id
         INNER JOIN briefs b ON b.brief_id=bb.brief_id
         INNER JOIN zones ON bb.zone_id = zones.zone_id
         INNER JOIN states ON bb.state_id = states.state_id
         INNER JOIN cities ON bb.city_id = cities.city_id
+        INNER JOIN users ON b.created_by_user_id = users.id
         WHERE 
             ab.user_id=%s
     """
@@ -284,6 +291,8 @@ def getPlannerBriefs(current_user):
                 'brand_logo': row['brand_logo'],
                 'campaign_obj': row['campaign_obj'],
                 'start_date': row['start_date'],
+                'first_name': row['first_name'],
+                'last_name': row['last_name'],
                 'status': row['status'],
                 'budgets': []
             }
@@ -331,8 +340,10 @@ def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
     """
     
     plans_query = """
-        SELECT * FROM plans
+        SELECT plans.plan_id, b.* FROM plans
+        INNER JOIN billboards b ON b.id=plans.billboard_id 
         WHERE budget_id=%s AND user_id=%s
+        ORDER BY created_at ASC
     """
 
     budget = query_db(query, (budget_id, current_user_id), True)
