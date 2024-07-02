@@ -318,6 +318,10 @@ def getPlannerBriefs(current_user):
 def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
 
     current_user_id = current_user['id']
+    query = request.args
+
+    average_speed_min = float(query.get("average_speed_min", 0) or 0)
+    average_speed_max = float(query.get("average_speed_max", 99999) or 99999)
     
     query = """
             SELECT bb.budget_id, briefs.brief_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget, ab.status 
@@ -337,6 +341,7 @@ def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
     video_query = """
         SELECT * FROM videofiles v
         WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s
+        AND average_speed>=%s AND average_speed<=%s
     """
     
     plans_query = """
@@ -352,7 +357,7 @@ def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
         return jsonify({}), 200
 
     plans = query_db(plans_query, (budget['budget_id'], current_user_id))
-    videos = query_db(video_query, (budget['zone_id'], budget['state_id'], budget['city_id']))
+    videos = query_db(video_query, (budget['zone_id'], budget['state_id'], budget['city_id'], average_speed_min, average_speed_max))
 
     video_data = []
 

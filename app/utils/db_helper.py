@@ -7,6 +7,11 @@ def init_db(app):
 
 def query_db(query, args=(), one=False, commit=False):
     cursor = current_app.mysql.connection.cursor()
+
+    # Print the final query with arguments substituted
+    final_query = cursor.mogrify(query, args)
+    print("Executing query:", final_query)
+
     cursor.execute(query, args)
 
     if commit:

@@ -172,17 +172,86 @@ def get_media_data(current_user):
     city_id = data.get("city_id")
     state_id = data.get("state_id")
     zone_id = data.get("zone_id")
-    visibility_duration_min = data.get("visibility_duration_min", 0) or 0
-    visibility_duration_max = data.get("visibility_duration_max", 99999) or 99999
+
+    visibility_duration_min = float(data.get("visibility_duration_min", 0) or 0)
+    visibility_duration_max = float(data.get("visibility_duration_max", 99999) or 99999)
+    
+    average_areas_min = float(data.get("average_areas_min", 0) or 0)
+    average_areas_max = float(data.get("average_areas_max", 99999) or 99999)
+
+    near_p_duration_min = float(data.get("near_p_duration_min", 0) or 0)
+    near_p_duration_max = float(data.get("near_p_duration_max", 99999) or 99999)
+
+    mid_p_duration_min = float(data.get("mid_p_duration_min", 0) or 0)
+    mid_p_duration_max = float(data.get("mid_p_duration_max", 99999) or 99999)
+
+    far_p_duration_min = float(data.get("far_p_duration_min", 0) or 0)
+    far_p_duration_max = float(data.get("far_p_duration_max", 99999) or 99999)
+
+    distance_to_center_min = float(data.get("distance_to_center_min", 0) or 0)
+    distance_to_center_max = float(data.get("distance_to_center_max", 99999) or 99999)
+
+    near_p_distance_min = float(data.get("near_p_distance_min", 0) or 0)
+    near_p_distance_max = float(data.get("near_p_distance_max", 99999) or 99999)
+
+    mid_p_distance_min = float(data.get("mid_p_distance_min", 0) or 0)
+    mid_p_distance_max = float(data.get("mid_p_distance_max", 99999) or 99999)
+
+    far_p_distance_min = float(data.get("far_p_distance_min", 0) or 0)
+    far_p_distance_max = float(data.get("far_p_distance_max", 99999) or 99999)
+    
+    average_speed_min = float(data.get("average_speed_min", 0) or 0)
+    average_speed_max = float(data.get("average_speed_max", 99999) or 99999)
+
+    length_of_stretch_min = float(data.get("length_of_stretch_min", 0) or 0)
+    length_of_stretch_max = float(data.get("length_of_stretch_max", 99999) or 99999)
+    
+    area_min = float(data.get("area_min", 0) or 0)
+    area_max = float(data.get("area_max", 99999999) or 99999999)
+
+    display_cost_per_month_min = float(data.get("display_cost_per_month_min", 0) or 0)
+    display_cost_per_month_max = float(data.get("display_cost_per_month_max", 99999999) or 99999999)
+
+    total_cost_min = float(data.get("total_cost_min", 0) or 0)
+    total_cost_max = float(data.get("total_cost_max", 99999999) or 99999999)
 
     q = """
         SELECT b.* FROM videofiles as v 
         INNER JOIN billboards b ON b.video_id=v.video_id
         WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s
         AND visibility_duration>=%s AND visibility_duration<=%s
+        AND average_areas>=%s AND average_areas<=%s
+        AND near_p_duration>=%s AND near_p_duration<=%s
+        AND mid_p_duration>=%s AND mid_p_duration<=%s
+        AND far_p_duration>=%s AND far_p_duration<=%s
+        AND distance_to_center>=%s AND distance_to_center<=%s
+        AND near_p_distance>=%s AND near_p_distance<=%s
+        AND mid_p_distance>=%s AND mid_p_distance<=%s
+        AND far_p_distance>=%s AND far_p_distance<=%s
+        AND average_speed>=%s AND average_speed<=%s
+        AND length_of_stretch>=%s AND length_of_stretch<=%s
+        AND display_cost_per_month>=%s AND display_cost_per_month<=%s
+        AND total_cost>=%s AND total_cost<=%s
+        AND area>=%s AND area<=%s
     """
 
-    values = (zone_id, state_id, city_id, visibility_duration_min, visibility_duration_max)
+    values = (
+        zone_id, state_id, city_id, 
+        visibility_duration_min, visibility_duration_max,
+        average_areas_min, average_areas_max,
+        near_p_duration_min, near_p_duration_max,
+        mid_p_duration_min, mid_p_duration_max,
+        far_p_duration_min, far_p_duration_max,
+        distance_to_center_min, distance_to_center_max,
+        near_p_distance_min, near_p_distance_max,
+        mid_p_distance_min, mid_p_distance_max,
+        far_p_distance_min, far_p_distance_max,
+        average_speed_min, average_speed_max,
+        length_of_stretch_min, length_of_stretch_max,
+        display_cost_per_month_min, display_cost_per_month_max,
+        total_cost_min, total_cost_max,
+        area_min, area_max
+    )
 
     billboards = query_db(q, values)
 
