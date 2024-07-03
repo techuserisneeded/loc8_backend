@@ -7,6 +7,7 @@ python-dotenv
 Flask-MySQLdb
 Flask-CORS
 bcrypt
+turfpy
 
 gunicorn
 opencv_python

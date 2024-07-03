@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, jsonify, request, current_app
 from werkzeug.utils import secure_filename
+import re
 
 from app.utils.helpers import token_required, superadmin_required, admin_required
 from app.utils.db_helper import query_db
@@ -14,19 +15,112 @@ from app.constants.default_weights import default_weights_front, default_weights
 
 metrics_bp = Blueprint('metrics', __name__)
 
+@metrics_bp.route("/impression", methods=['POST'])
+@token_required
+def add_impression(current_user):
+    body = request.get_json()
+    data = body.get("data")
+    
+    try:
+        for i in range(0,len(data) - 1):
+            row = data[i]['WKT']
+            impression = data[i]['Impressions']
+            numbers = re.findall(r'\d+\.?\d*', row)
+            # Convert the extracted numbers from strings to integers or floats
+            numbers = [float(num) for num in numbers]
+            if len(numbers) == 14 and impression and type(numbers[0]) == float and type(numbers[1]) == float and type(numbers[2]) == float and type(numbers[3]) == float and type(numbers[4]) == float and type(numbers[5]) == float and type(numbers[6]) == float and type(numbers[7]) == float and type(numbers[8]) == float and type(numbers[9]) == float and type(numbers[10]) == float and type(numbers[11]) == float and type(numbers[12]) == float and type(numbers[13]) == float:            
+                lat1  = numbers[0],
+                
+                long1 = numbers[1],
+                
+                lat2  = numbers[2],
+                long2 = numbers[3],
+                lat3  = numbers[4],
+                long3 = numbers[5],
+                lat4  = numbers[6],
+                long4 = numbers[7],
+                lat5  = numbers[8],
+                long5 = numbers[9],
+                lat6  = numbers[10],
+                long6 = numbers[11],
+                lat7  = numbers[12],
+                long7 = numbers[13],
+                # print()
+
+                insert_q = """
+                INSERT INTO impression_data(lat1,
+                        long1,
+                        lat2,
+                        long2,
+                        lat3,
+                        long3,
+                        lat4,
+                        long4,
+                        lat5,
+                        long5,
+                        lat6,
+                        long6,
+                        lat7,
+                        long7, 
+                        impression)
+                            VALUES (%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s, %s,%s, %s, %s)
+                 """
+                query_db(insert_q, (lat1[0],long1[0],lat2[0],long2[0],lat3[0],long3[0],lat4[0],long4[0],lat5[0],long5[0],lat6[0],long6[0],lat7[0],long7[0], impression))
+        query_db("COMMIT")
+
+        return jsonify({'message': 'Impression Added Successfully'}), 201 
+    except Exception as e:
+        print(str(e))
+        query_db("ROLLBACK")
+        return jsonify({'message': 'something went wrong'}), 500
+
+
+
+@metrics_bp.route('/efficiency', methods=['POST'])
+@token_required
+def calculate_efficiency(current_user):
+
+    billoards_q = """
+            SELECT b.net_saliency_score_city, b.rental_per_month, b.id
+            FROM billboards as b 
+    """
+    billboards = query_db(billoards_q)
+
+    query_db("START TRANSACTION")
+
+    for bill in billboards:
+        bill_id = bill.get("id")
+        efficiency = metrics.calculate_efficiency(bill.get("net_saliency_score_city"), bill.get("rental_per_month"))
+        q = """
+            UPDATE billboards 
+            SET 
+                efficiency = %s
+            WHERE 
+            id = %s
+        """
+        query_db(q, (efficiency, bill_id))
+    query_db("COMMIT")
+    
+
+    return jsonify({'message': 'Efficiency calculated successfully'}), 201
+
+
+
+
 @metrics_bp.route('/saliency', methods=['POST'])
 @token_required
 def calculate_saliency(current_user):
 
     body = request.get_json()
-
     zone_id = body.get("zone_id")
     state_id = body.get("state_id")
     city_id = body.get("city_id")
-    level = body.get("level", "city")
-
+    is_city_checked = body.get("iscitychecked")
+    is_location_checked = body.get("islocationchecked")
     body_weights_front = body.get("front_weightings", {})
     body_weights_rear = body.get("rear_weightings", {})
+
+    print(is_city_checked, is_location_checked)
 
     weights_front = {
         "distance_to_center": body_weights_front.get("distance_to_center") or default_weights_front.get("distance_to_center"),
@@ -50,6 +144,7 @@ def calculate_saliency(current_user):
         "saliency": body_weights_rear.get("saliency") or default_weights_rear.get("saliency"),
     }
 
+    
     billoards_q = """
             SELECT 
                 b.id, b.video_id, b.distance_to_center, b.average_areas, b.focal_vision_duration,
@@ -119,9 +214,172 @@ def calculate_saliency(current_user):
             query_db(q, (saliency_front, saliency_rear, saliency_net, bill_id))
 
         query_db("COMMIT")
-        return jsonify({'message': 'Saliency calculated successfully'}), 201
+        
+
+        # Ranking Net Saliency citywise
+        billoards_q =   '''
+        SELECT b.id,b.net_saliency_score_city,RANK() 
+        OVER ( ORDER BY net_saliency_score_city DESC) as rank_net_saliency_citywise 
+        FROM billboards b JOIN videofiles v
+        where v.city_id = %s
+        '''
+        billboard = query_db(billoards_q, (city_id,))
+        query_db("START TRANSACTION")
+        for bill in billboard:
+            bill_id = bill.get("id")
+            q = """
+            UPDATE billboards 
+            SET 
+                rank_net_saliency_citywise=%s
+            WHERE
+                id=%s
+            """
+            query_db(q, (bill.get('rank_net_saliency_citywise'),bill_id))
+        query_db("COMMIT")
+
+
+        # Front saliency Ranking citywise
+        billoards_q =   '''
+        SELECT b.id,b.saliency_score_front_city,RANK() 
+        OVER ( ORDER BY saliency_score_front_city DESC) as rank_front_saliency_citywise 
+        FROM billboards b JOIN videofiles v
+        where v.city_id = %s
+        '''
+
+        billboard = query_db(billoards_q, (city_id,))
+        
+        query_db("START TRANSACTION")
+        for bill in billboard:
+            bill_id = bill.get("id")
+            q = """
+            UPDATE billboards 
+            SET 
+                rank_front_saliency_citywise=%s
+            WHERE
+                id=%s
+            """
+            query_db(q, (bill.get('rank_front_saliency_citywise'),bill_id))
+        query_db("COMMIT")
+
+
+        # rear saliency ranking citywise
+        billoards_q =   '''
+        SELECT b.id,b.saliency_score_rear_city,RANK() 
+        OVER ( ORDER BY saliency_score_rear_city DESC) as rank_rear_saliency_citywise 
+        FROM billboards b JOIN videofiles v
+        where v.city_id = %s
+        '''
+        billboard = query_db(billoards_q, (city_id,))
+        
+        query_db("START TRANSACTION")
+        for bill in billboard:
+            bill_id = bill.get("id")
+            q = """
+            UPDATE billboards 
+            SET 
+                rank_rear_saliency_citywise=%s
+            WHERE
+                id=%s
+            """
+            query_db(q, (bill.get('rank_rear_saliency_citywise'),bill_id))
+        query_db("COMMIT")
+
     except Exception as e:
         print(str(e))
         query_db("ROLLBACK")
         return jsonify({'message': 'something went wrong'}), 500
+
+
+    try:
+        if is_location_checked == True:
+            billoards_q = """
+                        SELECT DISTINCT b.location
+            FROM billboards AS b
+            INNER JOIN videofiles AS v ON v.video_id = b.video_id
+            WHERE v.city_id = %s;
+            """
+            billboards = query_db(billoards_q, (city_id,))
+
+            for bill in billboards: 
+                unique_location = bill.get('location')
+
+                if unique_location != None:
+
+                    ##Rank rear saliency locationwise
+                    billoards_q = """
+                            Select
+                            b.id, b.video_id,b.location, b.saliency_score_rear_city, RANK()
+                            OVER ( ORDER BY saliency_score_rear_city DESC) as rank_saliency_rear_locationwise 
+                            FROM billboards as b INNER JOIN videofiles as v on v.video_id=b.video_id
+                            WHERE
+                            v.city_id=%s and b.location=%s 
+                            """
+                    resultant = query_db(billoards_q, (city_id,unique_location))
+
+                    for res in resultant:
+                        res_id = res.get("id")
+                        q = """
+                        UPDATE billboards 
+                        SET 
+                            rank_saliency_rear_locationwise=%s
+                        WHERE
+                            id=%s
+                        """
+                        query_db(q, (res.get('rank_saliency_rear_locationwise'),res_id))
+                    query_db("COMMIT")
+
+                    ##Rank front saliency locationwise
+                    billoards_q = """
+                            Select
+                            b.id, b.video_id,b.location, b.saliency_score_front_city, RANK()
+                            OVER ( ORDER BY saliency_score_front_city DESC) as rank_saliency_front_locationwise 
+                            FROM billboards as b INNER JOIN videofiles as v on v.video_id=b.video_id
+                            WHERE
+                            v.city_id=%s and b.location=%s 
+                            """
+                    resultant = query_db(billoards_q, (city_id,unique_location))
+
+                    for res in resultant:
+                        res_id = res.get("id")
+                        q = """
+                        UPDATE billboards 
+                        SET 
+                            rank_saliency_front_locationwise=%s
+                        WHERE
+                            id=%s
+                        """
+                        query_db(q, (res.get('rank_saliency_front_locationwise'),res_id))
+                    query_db("COMMIT")
+
+                ##Ranking Net saliency locationwise
+                    billoards_q = """
+                                Select
+                                b.id, b.video_id,b.location, b.net_saliency_score_city, RANK()
+                                OVER ( ORDER BY net_saliency_score_city DESC) as rank_net_saliency_locationwise 
+                                FROM billboards as b INNER JOIN videofiles as v on v.video_id=b.video_id
+                                WHERE
+                                v.city_id=%s and b.location=%s 
+                                """
+                    resultant = query_db(billoards_q, (city_id,unique_location))
+
+                    for res in resultant:
+                        res_id = res.get("id")
+                        q = """
+                        UPDATE billboards 
+                        SET 
+                            rank_net_saliency_locationwise=%s
+                        WHERE
+                            id=%s
+                        """
+                        query_db(q, (res.get('rank_net_saliency_locationwise'),res_id))
+                query_db("COMMIT")
+
+    except Exception as e:
+        print(str(e))
+        query_db("ROLLBACK")
+        return jsonify({'message': 'something went wrong'}), 500 
+
+    return jsonify({'message': 'Saliency calculated successfully'}), 201 
+
+    
 

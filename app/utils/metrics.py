@@ -25,3 +25,9 @@ def calculate_saliency(total):
 
 def calculate_net_saliency(saliency_front, weight_front, saliency_rear, weight_rear):
     return ((saliency_front*weight_front) + (saliency_rear * weight_rear)) /100
+
+def calculate_efficiency(saliency, rental_per_month):
+    if rental_per_month == 0:
+        return 0
+    else:
+       return (saliency * 100000/rental_per_month)
