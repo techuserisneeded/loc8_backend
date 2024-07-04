@@ -134,18 +134,17 @@ def add_array_to_plan(current_user):
     billboards = data.get("billboards")
     budget_id = data.get("budget_id")
     brief_id = data.get("brief_id")
-    video_id = data.get("video_id")
     
     last_plan = query_db("""
                     SELECT sr_no 
                     FROM plans 
                     WHERE 
-                        video_id=%s AND brief_id=%s AND budget_id=%s AND user_id=%s 
+                        brief_id=%s AND budget_id=%s AND user_id=%s 
                     ORDER BY sr_no 
                     DESC 
                     LIMIT 1
                 """, 
-                (video_id, brief_id, budget_id, current_user_id),
+                (brief_id, budget_id, current_user_id),
                 True
                 )
 
@@ -161,11 +160,11 @@ def add_array_to_plan(current_user):
             last_plan_sr_no = last_plan_sr_no + 1   
 
             q = """
-                INSERT INTO plans (plan_id, brief_id, budget_id, user_id, video_id, sr_no, billboard_id)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO plans (plan_id, brief_id, budget_id, user_id, sr_no, billboard_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """
 
-            v = (plan_id, brief_id, budget_id, current_user_id, video_id, last_plan_sr_no, bill_id)
+            v = (plan_id, brief_id, budget_id, current_user_id, last_plan_sr_no, bill_id)
 
             query_db(q, v)
 

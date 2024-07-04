@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 04, 2024 at 03:07 PM
+-- Generation Time: Jul 04, 2024 at 06:54 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.1.25
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -107,8 +107,8 @@ CREATE TABLE `billboards` (
 
 INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`, `latitude`, `longitude`, `vendor_name`, `location`, `traffic_direction`, `media_type`, `illumination`, `width`, `height`, `quantity`, `area`, `display_cost_per_month`, `printing_rate`, `mounting_rate`, `printing_cost`, `mounting_cost`, `total_cost`, `site_image`, `map_image`, `focal_vision_duration`, `saliency_score_front_city`, `saliency_score_rear_city`, `net_saliency_score_city`, `duration`, `rental_per_month`, `cost_for_duration`, `Rank_net_saliency_citywise`, `rank_saliency_front_locationwise`, `rank_saliency_rear_locationwise`, `rank_net_saliency_locationwise`, `Rank_front_saliency_citywise`, `Rank_rear_saliency_citywise`, `efficiency`, `impression_id`) VALUES
 ('22a83f6b-48fd-404f-baa7-f2a54189bb9b', 'a48252b1-5961-42f8-a887-f358df838e62', 2.38, 42.7, 0.62, 0.93, 0.48, 0.34, 60.19, 66.38, 76.84, 87.03, 0.61, 0.76, 7, '2024-06-08 06:10:08', 1, 18.899777, 73.200974, 'max', 'Andheri, 410222, India', 'right', 'media', 'backlit', 500, 500, 5, 1250000, 0, 8, 8, 10000000, 10000000, 20000000, 'b15ae4ad1817f804e982e8ca17f40888.jpg', NULL, 0, 26.986, 27.0165, 26.9921, 50, 65000, 108333, 7, 5, 5, 5, 7, 7, 41.5263, NULL),
-('2af06afe-153e-4eb0-b7da-8230890b895e', 'a48252b1-5961-42f8-a887-f358df838e62', 1.76, 43.53, 0.21, 0.79, 0.41, 0.31, 61.48, 66.86, 77.64, 88.68, 1.45, 0.64, 12, '2024-06-08 06:10:09', 1, 0.000000, 0.000000, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 103, 31, 5, 15965, 0, 7, 8, 111755, 127720, 239475, 'b15ae4ad1817f804e982e8ca17f40888.jpg', '407a94df-7c44-4b78-ab7c-dbf54f69cc71map.png', 0, 26.7997, 26.8722, 26.8142, 200, 100000, 666667, 8, 6, 6, 6, 8, 8, 26.8142, NULL),
-('35afb8f9-5026-4467-a29d-08b0831f6307', 'a48252b1-5961-42f8-a887-f358df838e62', 0.31, 31.18, 0, 0, 0.31, 0, 0, 0, 77.29, 0, 0.31, 0.56, 10, '2024-06-08 06:10:09', 1, 0.000000, 0.000000, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 899, 90, 2, 161820, 0, 8, 9, 1294560, 1456380, 2750940, 'b15ae4ad1817f804e982e8ca17f40888.jpg', NULL, 0, 31.4017, 31.4172, 31.4048, 1000, 20000, 666667, 2, 1, 1, 1, 2, 2, 157.024, NULL),
+('2af06afe-153e-4eb0-b7da-8230890b895e', 'a48252b1-5961-42f8-a887-f358df838e62', 1.76, 43.53, 0.21, 0.79, 0.41, 0.31, 61.48, 66.86, 77.64, 88.68, 1.45, 0.64, 12, '2024-06-08 06:10:09', 1, NULL, NULL, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 103, 31, 5, 15965, 0, 7, 8, 111755, 127720, 239475, 'b15ae4ad1817f804e982e8ca17f40888.jpg', '407a94df-7c44-4b78-ab7c-dbf54f69cc71map.png', 0, 26.7997, 26.8722, 26.8142, 200, 100000, 666667, 8, 6, 6, 6, 8, 8, 26.8142, NULL),
+('35afb8f9-5026-4467-a29d-08b0831f6307', 'a48252b1-5961-42f8-a887-f358df838e62', 0.31, 31.18, 0, 0, 0.31, 0, 0, 0, 77.29, 0, 0.31, 0.56, 10, '2024-06-08 06:10:09', 1, NULL, NULL, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 899, 90, 2, 161820, 0, 8, 9, 1294560, 1456380, 2750940, 'b15ae4ad1817f804e982e8ca17f40888.jpg', NULL, 0, 31.4017, 31.4172, 31.4048, 1000, 20000, 666667, 2, 1, 1, 1, 2, 2, 157.024, NULL),
 ('530b715d-1472-4b87-bdbc-037b0ccb650c', 'a48252b1-5961-42f8-a887-f358df838e62', 8.17, 43.95, 0, 3.1, 2.69, 2, 0, 39, 35.88, 34.37, 1.64, 0.7, 35, '2024-06-08 06:10:09', 1, 18.898224, 73.202648, 'Roht', 'Mumbai -India', 'UP', 'media type', 'illumination', 400, 700, 6, 1680000, 0, 8, 9, 13440000, 15120000, 28560000, 'b15ae4ad1817f804e982e8ca17f40888.jpg', 'a0190571-bbf9-436d-896b-87346d438945renault_billboard_images.jpg', 0, 27.2059, 27.2879, 27.2223, 30, 5000, 5000, 5, 3, 3, 3, 5, 5, 544.446, NULL),
 ('59f557a9-968f-494b-9992-f8333242e315', 'a48252b1-5961-42f8-a887-f358df838e62', 0.24, 41.36, 0, 0, 0.1, 0.14, 0, 0, 32.58, 30.77, 1.02, 0.69, 14, '2024-06-08 06:10:09', 1, 18.904081, 73.202448, 'Mohit', 'Mumbai -India', 'Down', 'media type', 'illumination', 800, 200, 4, 640000, 0, 8, 7, 5120000, 4480000, 9600000, 'b15ae4ad1817f804e982e8ca17f40888.jpg', '5e1be20d-fc0e-4be5-b856-b8acb7085947map.png', 0, 27.4629, 27.5139, 27.4731, 100, 1000000, 3333330, 4, 2, 2, 2, 4, 4, 2.74731, NULL),
 ('773f4cf1-be31-4350-b349-1dafba896dfd', 'a48252b1-5961-42f8-a887-f358df838e62', 1.55, 42.5, 0, 0.72, 0.48, 0.31, 0, 67.35, 76.91, 87.04, 0.58, 0.75, 9, '2024-06-08 06:10:09', 1, 18.897140, 73.199043, 'Mohit', 'Mumbai -India', 'Down', 'media type', 'illumination', 40, 90, 3, 10800, 0, 8, 9, 86400, 97200, 183600, 'b15ae4ad1817f804e982e8ca17f40888.jpg', '7939f7b4-e873-47a4-9e1e-556fadf2cf02renault_images.jpeg', 0, 27.0362, 27.0652, 27.042, 100, 200000, 666667, 6, 4, 4, 4, 6, 6, 13.521, NULL),
@@ -522,7 +522,6 @@ CREATE TABLE `plans` (
   `brief_id` varchar(40) NOT NULL,
   `budget_id` varchar(40) NOT NULL,
   `user_id` int(11) NOT NULL,
-  `video_id` varchar(40) NOT NULL,
   `sr_no` int(11) NOT NULL,
   `location` varchar(100) NOT NULL,
   `latitude` decimal(9,6) NOT NULL,
@@ -550,13 +549,6 @@ CREATE TABLE `plans` (
   `billboard_id` varchar(36) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `plans`
---
-
-INSERT INTO `plans` (`plan_id`, `brief_id`, `budget_id`, `user_id`, `video_id`, `sr_no`, `location`, `latitude`, `longitude`, `illumination`, `media_type`, `width`, `height`, `qty`, `size`, `units`, `duration`, `imp_per_month`, `rental_per_month`, `printing_rate`, `mounting_rate`, `cost_for_duration`, `printing_cost`, `mounting_cost`, `total`, `total_area`, `map_image`, `site_image`, `status`, `billboard_id`, `created_at`) VALUES
-('25f4cde5-ecd1-4f58-846f-e701b1c490e1', '2b4baa8d-4727-4679-a89f-32875e85412a', 'f92657bc-8f51-47f4-9b48-116af6f2b5ab', 39, 'a48252b1-5961-42f8-a887-f358df838e62', 2, '', 0.000000, 0.000000, '', '', 0, 0, 0, 0, 0.000, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.000, '', '', 1, '530b715d-1472-4b87-bdbc-037b0ccb650c', '2024-07-04 13:05:34');
 
 -- --------------------------------------------------------
 
@@ -790,7 +782,6 @@ ALTER TABLE `plans`
   ADD KEY `brief_id` (`brief_id`),
   ADD KEY `budget_id` (`budget_id`),
   ADD KEY `user_id` (`user_id`),
-  ADD KEY `video_id` (`video_id`),
   ADD KEY `fk_plans_billboards` (`billboard_id`);
 
 --
@@ -950,8 +941,7 @@ ALTER TABLE `plans`
   ADD CONSTRAINT `fk_plans_billboards` FOREIGN KEY (`billboard_id`) REFERENCES `billboards` (`id`),
   ADD CONSTRAINT `plans_ibfk_1` FOREIGN KEY (`brief_id`) REFERENCES `briefs` (`brief_id`),
   ADD CONSTRAINT `plans_ibfk_2` FOREIGN KEY (`budget_id`) REFERENCES `brief_budgets` (`budget_id`),
-  ADD CONSTRAINT `plans_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `plans_ibfk_4` FOREIGN KEY (`video_id`) REFERENCES `videofiles` (`video_id`);
+  ADD CONSTRAINT `plans_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `states`
