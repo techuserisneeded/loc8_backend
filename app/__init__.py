@@ -25,6 +25,7 @@ from app.routes.controller_routes import controllers_bp
 from app.routes.planner_routes import planners_bp
 from app.routes.plans_routes import plans_bp
 from app.routes.metrics_routes import metrics_bp
+from app.routes.files_routes import files_bp
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(video_bp, url_prefix='/videos')
@@ -35,3 +36,4 @@ app.register_blueprint(location_bp, url_prefix='/location')
 app.register_blueprint(brief_bp, url_prefix='/briefs')
 app.register_blueprint(plans_bp, url_prefix='/plans')
 app.register_blueprint(metrics_bp, url_prefix='/metrics')
+app.register_blueprint(files_bp, url_prefix='/files')

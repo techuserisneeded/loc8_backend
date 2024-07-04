@@ -345,10 +345,10 @@ def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
     """
     
     plans_query = """
-        SELECT plans.plan_id, b.* FROM plans
+        SELECT plans.plan_id, plans.sr_no, b.* FROM plans
         INNER JOIN billboards b ON b.id=plans.billboard_id 
         WHERE budget_id=%s AND user_id=%s
-        ORDER BY created_at ASC
+        ORDER BY sr_no ASC
     """
 
     budget = query_db(query, (budget_id, current_user_id), True)

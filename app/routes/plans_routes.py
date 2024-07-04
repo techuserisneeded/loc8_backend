@@ -136,24 +136,40 @@ def add_array_to_plan(current_user):
     brief_id = data.get("brief_id")
     video_id = data.get("video_id")
     
+    last_plan = query_db("""
+                    SELECT sr_no 
+                    FROM plans 
+                    WHERE 
+                        video_id=%s AND brief_id=%s AND budget_id=%s AND user_id=%s 
+                    ORDER BY sr_no 
+                    DESC 
+                    LIMIT 1
+                """, 
+                (video_id, brief_id, budget_id, current_user_id),
+                True
+                )
+
+    last_plan_sr_no = last_plan.get("sr_no") if last_plan != None else 0 
+    
     try:
         query_db("START TRANSACTION")
 
         for bill_id in billboards:
 
             plan_id = generate_uuid()
+            
+            last_plan_sr_no = last_plan_sr_no + 1   
 
             q = """
-                INSERT INTO plans (plan_id, brief_id, budget_id, user_id, video_id, billboard_id)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO plans (plan_id, brief_id, budget_id, user_id, video_id, sr_no, billboard_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
 
-            v = (plan_id, brief_id, budget_id, current_user_id, video_id, bill_id)
+            v = (plan_id, brief_id, budget_id, current_user_id, video_id, last_plan_sr_no, bill_id)
 
             query_db(q, v)
 
-            query_db("COMMIT")
-
+        query_db("COMMIT")
         return jsonify({'message': 'Plan added successfully'}), 201
         
     except Exception as e:
