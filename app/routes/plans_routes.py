@@ -194,32 +194,32 @@ def get_media_data(current_user):
     average_areas_min = float(data.get("average_areas_min", 0) or 0)
     average_areas_max = float(data.get("average_areas_max", 99999) or 99999)
 
-    near_p_duration_min = float(data.get("near_p_duration_min", 0) or 0)
-    near_p_duration_max = float(data.get("near_p_duration_max", 99999) or 99999)
+    # near_p_duration_min = float(data.get("near_p_duration_min", 0) or 0)
+    # near_p_duration_max = float(data.get("near_p_duration_max", 99999) or 99999)
 
-    mid_p_duration_min = float(data.get("mid_p_duration_min", 0) or 0)
-    mid_p_duration_max = float(data.get("mid_p_duration_max", 99999) or 99999)
+    # mid_p_duration_min = float(data.get("mid_p_duration_min", 0) or 0)
+    # mid_p_duration_max = float(data.get("mid_p_duration_max", 99999) or 99999)
 
-    far_p_duration_min = float(data.get("far_p_duration_min", 0) or 0)
-    far_p_duration_max = float(data.get("far_p_duration_max", 99999) or 99999)
+    # far_p_duration_min = float(data.get("far_p_duration_min", 0) or 0)
+    # far_p_duration_max = float(data.get("far_p_duration_max", 99999) or 99999)
 
-    distance_to_center_min = float(data.get("distance_to_center_min", 0) or 0)
-    distance_to_center_max = float(data.get("distance_to_center_max", 99999) or 99999)
+    # distance_to_center_min = float(data.get("distance_to_center_min", 0) or 0)
+    # distance_to_center_max = float(data.get("distance_to_center_max", 99999) or 99999)
 
-    near_p_distance_min = float(data.get("near_p_distance_min", 0) or 0)
-    near_p_distance_max = float(data.get("near_p_distance_max", 99999) or 99999)
+    # near_p_distance_min = float(data.get("near_p_distance_min", 0) or 0)
+    # near_p_distance_max = float(data.get("near_p_distance_max", 99999) or 99999)
 
-    mid_p_distance_min = float(data.get("mid_p_distance_min", 0) or 0)
-    mid_p_distance_max = float(data.get("mid_p_distance_max", 99999) or 99999)
+    # mid_p_distance_min = float(data.get("mid_p_distance_min", 0) or 0)
+    # mid_p_distance_max = float(data.get("mid_p_distance_max", 99999) or 99999)
 
-    far_p_distance_min = float(data.get("far_p_distance_min", 0) or 0)
-    far_p_distance_max = float(data.get("far_p_distance_max", 99999) or 99999)
+    # far_p_distance_min = float(data.get("far_p_distance_min", 0) or 0)
+    # far_p_distance_max = float(data.get("far_p_distance_max", 99999) or 99999)
     
     average_speed_min = float(data.get("average_speed_min", 0) or 0)
     average_speed_max = float(data.get("average_speed_max", 99999) or 99999)
 
-    length_of_stretch_min = float(data.get("length_of_stretch_min", 0) or 0)
-    length_of_stretch_max = float(data.get("length_of_stretch_max", 99999) or 99999)
+    # length_of_stretch_min = float(data.get("length_of_stretch_min", 0) or 0)
+    # length_of_stretch_max = float(data.get("length_of_stretch_max", 99999) or 99999)
     
     area_min = float(data.get("area_min", 0) or 0)
     area_max = float(data.get("area_max", 99999999) or 99999999)
@@ -230,54 +230,187 @@ def get_media_data(current_user):
     total_cost_min = float(data.get("total_cost_min", 0) or 0)
     total_cost_max = float(data.get("total_cost_max", 99999999) or 99999999)
 
-    q = """
-        SELECT b.* FROM videofiles as v 
-        INNER JOIN billboards b ON b.video_id=v.video_id
-        WHERE v.zone_id=%s AND v.state_id=%s AND v.city_id=%s
-        AND visibility_duration>=%s AND visibility_duration<=%s
-        AND average_areas>=%s AND average_areas<=%s
-        AND near_p_duration>=%s AND near_p_duration<=%s
-        AND mid_p_duration>=%s AND mid_p_duration<=%s
-        AND far_p_duration>=%s AND far_p_duration<=%s
-        AND distance_to_center>=%s AND distance_to_center<=%s
-        AND near_p_distance>=%s AND near_p_distance<=%s
-        AND mid_p_distance>=%s AND mid_p_distance<=%s
-        AND far_p_distance>=%s AND far_p_distance<=%s
-        AND average_speed>=%s AND average_speed<=%s
-        AND length_of_stretch>=%s AND length_of_stretch<=%s
-        AND display_cost_per_month>=%s AND display_cost_per_month<=%s
-        AND total_cost>=%s AND total_cost<=%s
-        AND area>=%s AND area<=%s
-    """
+    front_saliency_score_city_min = float(data.get("front_saliency_score_city_min", 0) or 0)
+    front_saliency_score_city_max = float(data.get("front_saliency_score_city_max", 101) or 101)
 
+    rear_saliency_score_city_min = float(data.get("rear_saliency_score_city_min", 0) or 0)
+    rear_saliency_score_city_max = float(data.get("rear_saliency_score_city_max", 101) or 101)
+
+    net_saliency_score_city_min = float(data.get("net_saliency_score_city_min", 0) or 0)
+    net_saliency_score_city_max = float(data.get("net_saliency_score_city_max", 101) or 101)
+
+
+    impressions_min = float(data.get("impressions_min", 0) or 0)
+    impressions_max = float(data.get("impressions_max", 1000000000) or 1000000000)
+
+    effective_impressions_min = float(data.get("effective_impressions_min", 0) or 0)
+    effective_impressions_max = float(data.get("effective_impressions_max", 1000000000) or 1000000000)
+
+    efficiency_min = float(data.get("efficiency_min", 0) or 0)
+    efficiency_max = float(data.get("efficiency_max", 10000000) or 10000000)
+    location = data.get("location", None) 
+    vendor_name = data.get("vendor_name", None) 
+    media_type = data.get("media_type", None) 
+    illumination = data.get("illumination", None)
+    top_impressions = int(data.get("top_impressions", 1000000) or 1000000)
+    top_area = int(data.get("top_area", 100000) or 10000)
+    top_average_speed = int(data.get("top_average_speed", 100000) or 10000)
+    top_display_cost_per_month = int(data.get("top_display_cost_per_month", 100000) or 10000)
+    top_total_cost = int(data.get("top_total_cost", 100000) or 10000)
+    top_visibility_duration = int(data.get("top_visibility_duration", 100000) or 10000)
+    top_front_saliency_citywise = int(data.get("top_front_saliency_citywise", 100000) or 10000)
+    top_rear_saliency_citywise = int(data.get("top_rear_saliency_citywise", 100000) or 10000)
+    top_net_saliency_citywise = int(data.get("top_net_saliency_citywise", 100000) or 10000)
+    top_front_saliency_locationwise = int(data.get("top_front_saliency_locationwise", 100000) or 10000)
+    top_rear_saliency_locationwise = int(data.get("top_rear_saliency_locationwise", 100000) or 10000)
+    top_net_saliency_locationwise = int(data.get("top_net_saliency_locationwise", 100000) or 10000)
+    top_effective_impressions = int(data.get("top_effective_impressions", 100000) or 10000)
+    top_efficiency = int(data.get("top_efficiency", 100000) or 10000)
+
+    # if location is not None:
+        # q = """
+        #     SELECT b.* FROM videofiles as v 
+        #     INNER JOIN billboards b ON b.video_id=v.video_id
+        #     WHERE v.zone_id=%s 
+        #     AND v.state_id=%s 
+        #     AND v.city_id=%s
+        #     AND visibility_duration>=%s 
+        #     AND visibility_duration<=%s
+        #     AND average_speed>=%s 
+        #     AND average_speed<=%s
+        #     AND display_cost_per_month>=%s 
+        #     AND display_cost_per_month<=%s
+        #     AND total_cost>=%s
+        #     AND total_cost<=%s
+        #     AND saliency_score_front_city>=%s
+        #     AND saliency_score_front_city<=%s
+        #     AND saliency_score_rear_city>=%s
+        #     AND saliency_score_rear_city<=%s
+        #     AND net_saliency_score_city>=%s
+        #     AND net_saliency_score_city<=%s
+        #     AND effective_impression>=%s
+        #     AND effective_impression<=%s
+        #     AND area>=%s 
+        #     AND area<=%s
+        #     AND (location LIKE CONCAT('%%' ,%s, '%%')
+        #     OR location LIKE CONCAT(%s, '%%')
+        #     OR location LIKE CONCAT('%%' ,%s)
+        #     OR location = %s);
+        # """
+        
+    q = """WITH ranked_billboards AS (
+    SELECT b.*, v.zone_id, v.state_id, v.city_id, v.average_speed,
+        ROW_NUMBER() OVER (ORDER BY area DESC) AS rank_area,
+        ROW_NUMBER() OVER (ORDER BY display_cost_per_month DESC) AS rank_display_cost_per_month,
+        ROW_NUMBER() OVER (ORDER BY visibility_duration DESC) AS rank_visibility_duration,
+        ROW_NUMBER() OVER (ORDER BY total_cost DESC) AS rank_total_cost,
+        ROW_NUMBER() OVER (ORDER BY effective_impression DESC) AS rank_effective_impression,
+        ROW_NUMBER() OVER (ORDER BY efficiency DESC) AS rank_efficiency
+    FROM
+        videofiles as v INNER JOIN billboards b on b.video_id = v.video_id 
+)
+SELECT *
+FROM ranked_billboards rb
+WHERE 
+    rb.zone_id = %s
+    AND rb.state_id = %s 
+    AND rb.city_id = %s 
+    AND rb.visibility_duration >= %s
+    AND rb.visibility_duration <= %s
+    AND rb.average_speed>=%s
+    AND rb.average_speed<=%s 
+    AND rb.display_cost_per_month>=%s 
+    AND rb.display_cost_per_month<=%s
+    AND rb.total_cost>=%s
+    AND rb.total_cost<=%s
+    AND rb.saliency_score_front_city>=%s
+    AND rb.saliency_score_front_city<=%s
+    AND rb.saliency_score_rear_city>=%s
+    AND rb.saliency_score_rear_city<=%s
+    AND rb.net_saliency_score_city>=%s
+    AND rb.net_saliency_score_city<=%s
+    AND rb.effective_impression>=%s
+    AND rb.effective_impression<=%s
+    AND rb.area>=%s 
+    AND rb.area<=%s
+    AND rb.rank_front_saliency_citywise <= %s
+    AND rb.rank_rear_saliency_citywise <= %s
+    AND rb.rank_net_saliency_citywise <= %s
+    AND rank_saliency_front_locationwise <= %s
+    AND rank_saliency_rear_locationwise <= %s
+    AND rank_net_saliency_locationwise <= %s
+    AND (rank_area <= %s OR %s IS NULL) 
+    AND (rank_display_cost_per_month <= %s OR %s IS NULL)
+    AND (rank_visibility_duration <= %s OR %s IS NULL)
+    AND (rank_total_cost <= %s OR %s IS NULL)
+    AND (rank_effective_impression <= %s OR %s IS NULL)
+    AND (rank_efficiency <= %s OR %s IS NULL)
+ORDER BY area DESC, display_cost_per_month DESC, visibility_duration desc, total_cost DESC, effective_impression DESC, efficiency DESC
+    """
     values = (
-        zone_id, state_id, city_id, 
-        visibility_duration_min, visibility_duration_max,
-        average_areas_min, average_areas_max,
-        near_p_duration_min, near_p_duration_max,
-        mid_p_duration_min, mid_p_duration_max,
-        far_p_duration_min, far_p_duration_max,
-        distance_to_center_min, distance_to_center_max,
-        near_p_distance_min, near_p_distance_max,
-        mid_p_distance_min, mid_p_distance_max,
-        far_p_distance_min, far_p_distance_max,
-        average_speed_min, average_speed_max,
-        length_of_stretch_min, length_of_stretch_max,
-        display_cost_per_month_min, display_cost_per_month_max,
-        total_cost_min, total_cost_max,
-        area_min, area_max
+        zone_id, state_id, city_id, visibility_duration_min, visibility_duration_max,
+        average_speed_min, average_speed_max, display_cost_per_month_min, display_cost_per_month_max,
+        total_cost_min, total_cost_max, front_saliency_score_city_min, front_saliency_score_city_max, rear_saliency_score_city_min, 
+        rear_saliency_score_city_max, net_saliency_score_city_min, net_saliency_score_city_max,
+        effective_impressions_min, effective_impressions_max, area_min, area_max,
+        top_front_saliency_citywise, top_rear_saliency_citywise, top_net_saliency_citywise,top_front_saliency_locationwise, top_rear_saliency_locationwise
+        ,top_net_saliency_locationwise,top_area, top_area, top_display_cost_per_month, top_display_cost_per_month, top_visibility_duration, top_visibility_duration, 
+        top_total_cost, top_total_cost, top_effective_impressions, top_effective_impressions, top_efficiency, top_efficiency
     )
 
     billboards = query_db(q, values)
+    if billboards == None:
+        print(0)
+    else:
+        print(len(billboards))
 
     return jsonify(billboards), 200
 
+# else:
+    #     q = """
+    #             SELECT b.* FROM videofiles as v 
+    #         INNER JOIN billboards b ON b.video_id=v.video_id
+    #         WHERE v.zone_id=%s 
+    #         AND v.state_id=%s 
+    #         AND v.city_id=%s
+    #         AND visibility_duration>=%s 
+    #         AND visibility_duration<=%s
+    #         AND average_speed>=%s 
+    #         AND average_speed<=%s
+    #         AND display_cost_per_month>=%s 
+    #         AND display_cost_per_month<=%s
+    #         AND total_cost>=%s
+    #         AND total_cost<=%s
+    #         AND saliency_score_front_city>=%s
+    #         AND saliency_score_front_city<=%s
+    #         AND saliency_score_rear_city>=%s
+    #         AND saliency_score_rear_city<=%s
+    #         AND net_saliency_score_city>=%s
+    #         AND net_saliency_score_city<=%s
+    #         AND effective_impression>=%s
+    #         AND effective_impression<=%s
+    #         AND area>=%s 
+    #         AND area<=%s
+            
+    #         """
+    #     values = (
+    #             zone_id, state_id, city_id, 
+    #         visibility_duration_min, visibility_duration_max,
+    #         average_speed_min, average_speed_max,
+    #         display_cost_per_month_min, display_cost_per_month_max,
+    #         total_cost_min, total_cost_max, front_saliency_score_city_min, front_saliency_score_city_max,
+    #         rear_saliency_score_city_min, rear_saliency_score_city_max, net_saliency_score_city_min,
+    #         net_saliency_score_city_max,effective_impressions_min, effective_impressions_max,
+    #         area_min, area_max)
+
+    #     billboards = query_db(q, values)
+
+    #     return jsonify(billboards), 200
 
     
-   
 
 
 
-    
+        
 
 

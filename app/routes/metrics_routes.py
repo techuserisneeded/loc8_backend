@@ -12,8 +12,60 @@ from app.constants.roles import roles
 from app.services.users import is_user_email_exits, is_emp_id_exits
 from app.services.user_areas import insert_user_areas
 from app.constants.default_weights import default_weights_front, default_weights_rear
+from turfpy.measurement import boolean_point_in_polygon
+from geojson import Point, Polygon, Feature
+
 
 metrics_bp = Blueprint('metrics', __name__)
+
+@metrics_bp.route("/estimateimpression", methods=['POST'])
+@token_required
+def estimate_impression(current_user):
+    try:
+        q = '''
+        SELECT COALESCE(latitude, 0) AS latitude, COALESCE(longitude, 0) AS longitude, id, impression_id, effective_impression, net_saliency_score_city
+        FROM billboards as b
+        '''
+        billboard = query_db(q)
+
+        query_q = '''SELECT impression_id, impression, lat1, long1, lat2, long2, lat3, long3, lat4, long4, lat5, long5, lat6, long6, lat7, long7 
+        FROM impression_data
+        '''
+        impressions = query_db(query_q)
+        for bill in billboard:
+            for impression in impressions:
+                point = Feature(geometry=Point((bill.get('latitude'), bill.get('longitude'))))
+                polygon = Polygon(
+                    [
+                        [
+                            (impression.get('lat1'), impression.get('long1')),
+                            (impression.get('lat2'), impression.get('long2')),
+                            (impression.get('lat3'), impression.get('long3')),
+                            (impression.get('lat4'), impression.get('long4')),
+                            (impression.get('lat5'), impression.get('long5')),
+                            (impression.get('lat6'), impression.get('long6')),
+                            (impression.get('lat7'), impression.get('long7')),
+                        ]
+                    ]
+                )
+
+                if(boolean_point_in_polygon(point, polygon)):
+                    
+                    effective_impression_val = bill.get('net_saliency_score_city')*impression.get('impression')
+                    q = '''UPDATE billboards
+                    SET impression_id = %s, effective_impression = %s
+                    where id= %s'''
+                    query_db(q, (impression.get('impression_id'),effective_impression_val, bill.get('id')))
+                    query_db("COMMIT")
+                    break
+        return jsonify({'message': 'Impression Estimated Successfully'}), 201 
+    except Exception as e:
+        print(str(e))
+        query_db("ROLLBACK")
+        return jsonify({'message': 'something went wrong'}), 500
+
+
+
 
 @metrics_bp.route("/impression", methods=['POST'])
 @token_required
@@ -29,22 +81,22 @@ def add_impression(current_user):
             # Convert the extracted numbers from strings to integers or floats
             numbers = [float(num) for num in numbers]
             if len(numbers) == 14 and impression and type(numbers[0]) == float and type(numbers[1]) == float and type(numbers[2]) == float and type(numbers[3]) == float and type(numbers[4]) == float and type(numbers[5]) == float and type(numbers[6]) == float and type(numbers[7]) == float and type(numbers[8]) == float and type(numbers[9]) == float and type(numbers[10]) == float and type(numbers[11]) == float and type(numbers[12]) == float and type(numbers[13]) == float:            
-                lat1  = numbers[0],
+                long1  = numbers[0],
                 
-                long1 = numbers[1],
+                lat1 = numbers[1],
                 
-                lat2  = numbers[2],
-                long2 = numbers[3],
-                lat3  = numbers[4],
-                long3 = numbers[5],
-                lat4  = numbers[6],
-                long4 = numbers[7],
-                lat5  = numbers[8],
-                long5 = numbers[9],
-                lat6  = numbers[10],
-                long6 = numbers[11],
-                lat7  = numbers[12],
-                long7 = numbers[13],
+                long2  = numbers[2],
+                lat2 = numbers[3],
+                long3  = numbers[4],
+                lat3 = numbers[5],
+                long4  = numbers[6],
+                lat4 = numbers[7],
+                long5  = numbers[8],
+                lat5 = numbers[9],
+                long6  = numbers[10],
+                lat6 = numbers[11],
+                long7  = numbers[12],
+                lat7 = numbers[13],
                 # print()
 
                 insert_q = """
