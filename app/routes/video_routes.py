@@ -457,7 +457,7 @@ def add_asset_info(current_user, billboard_id):
             map_img_filename = generate_uuid() + secure_filename(map_image_file.filename)
 
     if 'site_image' in request.files:
-        site_image_file = request.files['map_image']
+        site_image_file = request.files['site_image']
         if site_image_file.filename != '':
             site_img_filename = generate_uuid() + secure_filename(site_image_file.filename)
 

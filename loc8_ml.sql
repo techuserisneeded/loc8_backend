@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 04, 2024 at 07:44 PM
+-- Generation Time: Jul 05, 2024 at 07:58 PM
 -- Server version: 10.4.32-MariaDB
--- PHP Version: 8.1.25
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -79,9 +79,9 @@ CREATE TABLE `billboards` (
   `display_cost_per_month` float DEFAULT 0,
   `printing_rate` float DEFAULT 0,
   `mounting_rate` float DEFAULT 0,
-  `printing_cost` float DEFAULT 0,
-  `mounting_cost` float DEFAULT 0,
-  `total_cost` float DEFAULT 0,
+  `printing_cost` decimal(10,2) DEFAULT NULL,
+  `mounting_cost` decimal(10,2) DEFAULT NULL,
+  `total_cost` decimal(10,2) DEFAULT NULL,
   `site_image` varchar(255) DEFAULT NULL,
   `map_image` varchar(255) DEFAULT NULL,
   `focal_vision_duration` float DEFAULT 0,
@@ -90,7 +90,7 @@ CREATE TABLE `billboards` (
   `net_saliency_score_city` float DEFAULT 0,
   `duration` int(11) DEFAULT 0,
   `rental_per_month` float DEFAULT 0,
-  `cost_for_duration` float DEFAULT 0,
+  `cost_for_duration` decimal(10,2) DEFAULT NULL,
   `Rank_net_saliency_citywise` int(11) NOT NULL DEFAULT 0,
   `rank_saliency_front_locationwise` int(11) NOT NULL DEFAULT 0,
   `rank_saliency_rear_locationwise` int(11) NOT NULL DEFAULT 0,
@@ -107,15 +107,10 @@ CREATE TABLE `billboards` (
 --
 
 INSERT INTO `billboards` (`id`, `video_id`, `visibility_duration`, `distance_to_center`, `central_duration`, `near_p_duration`, `mid_p_duration`, `far_p_duration`, `central_distance`, `near_p_distance`, `mid_p_distance`, `far_p_distance`, `average_areas`, `confidence`, `tracker_id`, `created_at`, `created_by_user_id`, `latitude`, `longitude`, `vendor_name`, `location`, `traffic_direction`, `media_type`, `illumination`, `width`, `height`, `quantity`, `area`, `display_cost_per_month`, `printing_rate`, `mounting_rate`, `printing_cost`, `mounting_cost`, `total_cost`, `site_image`, `map_image`, `focal_vision_duration`, `saliency_score_front_city`, `saliency_score_rear_city`, `net_saliency_score_city`, `duration`, `rental_per_month`, `cost_for_duration`, `Rank_net_saliency_citywise`, `rank_saliency_front_locationwise`, `rank_saliency_rear_locationwise`, `rank_net_saliency_locationwise`, `Rank_front_saliency_citywise`, `Rank_rear_saliency_citywise`, `efficiency`, `impression_id`, `effective_impression`) VALUES
-('22a83f6b-48fd-404f-baa7-f2a54189bb9b', 'a48252b1-5961-42f8-a887-f358df838e62', 2.38, 42.7, 0.62, 0.93, 0.48, 0.34, 60.19, 66.38, 76.84, 87.03, 0.61, 0.76, 7, '2024-06-08 06:10:08', 1, 18.899777, 73.200974, 'max', 'Andheri, 410222, India', 'right', 'media', 'backlit', 500, 500, 5, 1250000, 0, 8, 8, 10000000, 10000000, 20000000, NULL, NULL, 0, 26.986, 27.0165, 26.9921, 50, 65000, 108333, 7, 1, 1, 1, 7, 7, 41.5263, NULL, 0.0000),
-('2af06afe-153e-4eb0-b7da-8230890b895e', 'a48252b1-5961-42f8-a887-f358df838e62', 1.76, 43.53, 0.21, 0.79, 0.41, 0.31, 61.48, 66.86, 77.64, 88.68, 1.45, 0.64, 12, '2024-06-08 06:10:09', 1, 0.000000, 0.000000, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 103, 31, 5, 15965, 0, 7, 8, 111755, 127720, 239475, 'be6b3bde-8644-4c38-87c5-198774c90d82map.png', '407a94df-7c44-4b78-ab7c-dbf54f69cc71map.png', 0, 26.7997, 26.8722, 26.8142, 200, 100000, 666667, 8, 5, 5, 5, 8, 8, 26.8142, NULL, 0.0000),
-('35afb8f9-5026-4467-a29d-08b0831f6307', 'a48252b1-5961-42f8-a887-f358df838e62', 0.31, 31.18, 0, 0, 0.31, 0, 0, 0, 77.29, 0, 0.31, 0.56, 10, '2024-06-08 06:10:09', 1, 0.000000, 0.000000, 'Rohit', 'Mumbai -India', 'UP', 'media type', 'illumination', 899, 90, 2, 161820, 0, 8, 9, 1294560, 1456380, 2750940, NULL, NULL, 0, 31.4017, 31.4172, 31.4048, 1000, 20000, 666667, 2, 1, 1, 1, 2, 2, 157.024, NULL, 0.0000),
-('530b715d-1472-4b87-bdbc-037b0ccb650c', 'a48252b1-5961-42f8-a887-f358df838e62', 8.17, 43.95, 0, 3.1, 2.69, 2, 0, 39, 35.88, 34.37, 1.64, 0.7, 35, '2024-06-08 06:10:09', 1, 18.898224, 73.202648, 'Roht', 'Mumbai -India', 'UP', 'media type', 'illumination', 400, 700, 6, 1680000, 0, 8, 9, 13440000, 15120000, 28560000, '7a27e61d-9c2c-44a0-8912-614a761ee0bcrenault_billboard_images.jpg', 'a0190571-bbf9-436d-896b-87346d438945renault_billboard_images.jpg', 0, 27.2059, 27.2879, 27.2223, 30, 5000, 5000, 5, 3, 3, 3, 5, 5, 544.446, NULL, 0.0000),
-('59f557a9-968f-494b-9992-f8333242e315', 'a48252b1-5961-42f8-a887-f358df838e62', 0.24, 41.36, 0, 0, 0.1, 0.14, 0, 0, 32.58, 30.77, 1.02, 0.69, 14, '2024-06-08 06:10:09', 1, 18.904081, 73.202448, 'Mohit', 'Mumbai -India', 'Down', 'media type', 'illumination', 800, 200, 4, 640000, 0, 8, 7, 5120000, 4480000, 9600000, '03db82ed-6804-44dd-b67b-670177154389map.png', '5e1be20d-fc0e-4be5-b856-b8acb7085947map.png', 0, 27.4629, 27.5139, 27.4731, 100, 1000000, 3333330, 4, 2, 2, 2, 4, 4, 2.74731, NULL, 0.0000),
-('773f4cf1-be31-4350-b349-1dafba896dfd', 'a48252b1-5961-42f8-a887-f358df838e62', 1.55, 42.5, 0, 0.72, 0.48, 0.31, 0, 67.35, 76.91, 87.04, 0.58, 0.75, 9, '2024-06-08 06:10:09', 1, 18.897140, 73.199043, 'Mohit', 'Mumbai -India', 'Down', 'media type', 'illumination', 40, 90, 3, 10800, 0, 8, 9, 86400, 97200, 183600, '818489ad-7e0c-4a9f-989a-80cb2282a557renault_images.jpeg', '7939f7b4-e873-47a4-9e1e-556fadf2cf02renault_images.jpeg', 0, 27.0362, 27.0652, 27.042, 100, 200000, 666667, 6, 4, 4, 4, 6, 6, 13.521, NULL, 0.0000),
-('af801ffe-1b06-4b97-8742-b1430d690c18', 'a48252b1-5961-42f8-a887-f358df838e62', 0.59, 35.45, 0, 0.1, 0.38, 0.07, 0, 71.7, 77.62, 83.94, 0.37, 0.54, 8, '2024-06-08 06:10:08', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 29.7263, 29.7448, 29.73, 0, 0, 0, 3, 0, 0, 0, 3, 3, 0, NULL, 0.0000),
-('c4a40bb5-95b0-4110-9d00-b3e1981b741d', 'a48252b1-5961-42f8-a887-f358df838e62', 13.48, 46.76, 7.17, 2.76, 1.9, 1.38, 57.21, 70.15, 81.51, 92.43, 2.34, 0.69, 6, '2024-06-08 06:10:08', 1, 19.196141, 72.793709, 'Max', 'Mumbai -India', 'straight', 'billboard', 'front lit', 200, 200, 15, 600000, 0, 8, 8, 4800000, 4800000, 9600000, NULL, NULL, 0, 26.0819, 26.1989, 26.1053, 20, 50000, 33333.3, 9, 6, 6, 6, 9, 9, 52.2106, 2081, 72736414.2310),
-('d24367f3-a8a1-4e84-ab23-dbcf237ac058', 'a48252b1-5961-42f8-a887-f358df838e62', 3.24, 19.75, 2.1, 0, 0, 0, 51.02, 0, 0, 0, 9.82, 0.54, 11, '2024-06-08 06:10:09', 1, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 0, 37.8498, 38.3408, 37.948, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, NULL, 0.0000);
+('22a83f6b-48fd-404f-baa7-f2a54189bb9b', 'a48252b1-5961-42f8-a887-f358df838e62', 4.14, 43.115, 0.83, 1.72, 0.89, 0.65, 60.835, 66.62, 77.24, 87.855, 1.03, 0.7, 12, '2024-06-08 06:10:08', 1, 18.899777, 73.200974, 'max', 'Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'right', 'media', 'backlit', 50, 50, 5, 12500, 0, 8, 8, 100000.00, 100000.00, 308333.33, 'd0947d73-4bfe-4eee-9b67-748cdf6491a3Max_Life_Insurance_logo.png', 'bbd9d448-2366-4da7-a251-8a3ab36e387dmap.png', 0, 26.986, 27.0165, 26.9921, 50, 65000, 108333.33, 7, 1, 1, 1, 7, 7, 41.5263, NULL, 0.0000),
+('530b715d-1472-4b87-bdbc-037b0ccb650c', 'a48252b1-5961-42f8-a887-f358df838e62', 8.17, 43.95, 0, 3.1, 2.69, 2, 0, 39, 35.88, 34.37, 1.64, 0.7, 35, '2024-06-08 06:10:09', 1, 18.898224, 73.202648, 'Roht', 'Mumbai -India', 'UP', 'media type', 'illumination', 400, 700, 6, 1680000, 0, 8, 9, 13440000.00, 15120000.00, 28560000.00, '7a27e61d-9c2c-44a0-8912-614a761ee0bcrenault_billboard_images.jpg', 'a0190571-bbf9-436d-896b-87346d438945renault_billboard_images.jpg', 0, 27.2059, 27.2879, 27.2223, 30, 5000, 5000.00, 5, 3, 3, 3, 5, 5, 544.446, NULL, 0.0000),
+('59f557a9-968f-494b-9992-f8333242e315', 'a48252b1-5961-42f8-a887-f358df838e62', 0.24, 41.36, 0, 0, 0.1, 0.14, 0, 0, 32.58, 30.77, 1.02, 0.69, 14, '2024-06-08 06:10:09', 1, 18.904081, 73.202448, 'Mohit', 'Mumbai -India', 'Down', 'media type', 'illumination', 800, 200, 4, 640000, 0, 8, 7, 5120000.00, 4480000.00, 9600000.00, '03db82ed-6804-44dd-b67b-670177154389map.png', '5e1be20d-fc0e-4be5-b856-b8acb7085947map.png', 0, 27.4629, 27.5139, 27.4731, 100, 1000000, 3333330.00, 4, 2, 2, 2, 4, 4, 2.74731, NULL, 0.0000),
+('d24367f3-a8a1-4e84-ab23-dbcf237ac058', 'a48252b1-5961-42f8-a887-f358df838e62', 3.55, 25.465, 2.1, 0, 0.31, 0, 25.51, 0, 38.645, 0, 5.065, 0.55, 11, '2024-06-08 06:10:09', 1, 18.892431, 73.205717, 'name', 'Mumbai - Pune Expressway, Rasayani, Khalapur Taluka, Raigad District, Maharashtra, 410222, India', 'traffic', 'Billboard-2', 'Front Lit', 200, 200, 8, 320000, 0, 8, 8, 2560000.00, 2560000.00, 5186666.67, '93d324af-2e9d-4bc3-8d79-1892a783bae0renault_images.jpeg', '0844b7aa-e764-4b54-9522-075568fcd276renault_images.jpeg', 0, 37.8498, 38.3408, 37.948, 25, 80000, 66666.67, 1, 0, 0, 0, 1, 1, 0, NULL, 0.0000);
 
 --
 -- Triggers `billboards`
@@ -136,7 +131,7 @@ DELIMITER $$
 CREATE TRIGGER `calculate_total_cost_before_insert` BEFORE INSERT ON `billboards` FOR EACH ROW BEGIN
     SET NEW.printing_cost = NEW.area * NEW.printing_rate;
     SET NEW.mounting_cost = NEW.area * NEW.mounting_rate;
-    SET NEW.total_cost = NEW.display_cost_per_month + NEW.printing_cost + NEW.mounting_cost;
+    SET NEW.total_cost = NEW.cost_for_duration + NEW.printing_cost + NEW.mounting_cost;
 END
 $$
 DELIMITER ;
@@ -144,7 +139,7 @@ DELIMITER $$
 CREATE TRIGGER `calculate_total_cost_before_update` BEFORE UPDATE ON `billboards` FOR EACH ROW BEGIN
     SET NEW.printing_cost = NEW.area * NEW.printing_rate;
     SET NEW.mounting_cost = NEW.area * NEW.mounting_rate;
-    SET NEW.total_cost = NEW.display_cost_per_month + NEW.printing_cost + NEW.mounting_cost;
+    SET NEW.total_cost = NEW.cost_for_duration + NEW.printing_cost + NEW.mounting_cost;
 END
 $$
 DELIMITER ;
