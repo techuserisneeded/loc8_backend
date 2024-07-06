@@ -1,6 +1,9 @@
 def calculate_distance_to_center(distance_to_center, weightings):
     return ((100 - distance_to_center)*weightings)/100
 
+def calculate_distance_to_center_rear(distance_to_center, weightings):
+    return ((distance_to_center)*weightings)/100
+
 def calculate_average_areas(average_areas, weightings):
     return (average_areas*weightings)/100
 

@@ -1,6 +1,6 @@
 default_weights_front = {
     "distance_to_center": 40,
-    "average_areas": 20,
+    "average_areas": 25,
     "focal_vision_duration": 10,
     "near_p_duration": 6.25,
     "mid_p_duration": 5,
@@ -10,12 +10,12 @@ default_weights_front = {
 }
 
 default_weights_rear = {
-    "distance_to_center": 40,
+    "distance_to_center": 25,
     "average_areas": 25,
-    "focal_vision_duration": 10,
-    "near_p_duration": 6.25,
-    "mid_p_duration": 5,
-    "far_p_duration": 3.75,
+    "focal_vision_duration": 16,
+    "near_p_duration": 10,
+    "mid_p_duration": 8,
+    "far_p_duration": 6,
     "average_speed": 10,
     "saliency": 20
 }

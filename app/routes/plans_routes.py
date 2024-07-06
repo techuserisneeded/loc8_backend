@@ -183,7 +183,30 @@ def add_array_to_plan(current_user):
 def get_media_data(current_user):
 
     data = request.args
+    grouped_data = {}
+    
+    for key, value in data.items():
+    # Extract the prefix (0, 1, 2, etc.)
+        prefix = key.split('[')[0]
+        if prefix == '0' or prefix == '1' or prefix == '2' or prefix == '3':
+        # Initialize a list for the prefix if it doesn't exist
+            if prefix not in grouped_data:
+                grouped_data[prefix] = []
+            
+            # Append the value to the list corresponding to the prefix
+            grouped_data[prefix].append(value)
 
+# Convert the grouped data to a list of lists
+    result = [grouped_data[key] for key in sorted(grouped_data.keys())]
+
+# Print the result
+    vendor_name = result[0]
+    location = result[1]
+    media_type = result[2]
+    illumination = result[3]
+    
+    print(vendor_name, len(location), media_type, len(illumination))
+    
     city_id = data.get("city_id")
     state_id = data.get("state_id")
     zone_id = data.get("zone_id")
@@ -248,10 +271,6 @@ def get_media_data(current_user):
 
     efficiency_min = float(data.get("efficiency_min", 0) or 0)
     efficiency_max = float(data.get("efficiency_max", 10000000) or 10000000)
-    location = data.get("location", None) 
-    vendor_name = data.get("vendor_name", None) 
-    media_type = data.get("media_type", None) 
-    illumination = data.get("illumination", None)
     top_impressions = int(data.get("top_impressions", 1000000) or 1000000)
     top_area = int(data.get("top_area", 100000) or 10000)
     top_average_speed = int(data.get("top_average_speed", 100000) or 10000)
@@ -345,8 +364,50 @@ WHERE
     AND (rank_total_cost <= %s OR %s IS NULL)
     AND (rank_effective_impression <= %s OR %s IS NULL)
     AND (rank_efficiency <= %s OR %s IS NULL)
-ORDER BY area DESC, display_cost_per_month DESC, visibility_duration desc, total_cost DESC, effective_impression DESC, efficiency DESC
     """
+    
+    
+    like_conditions = []
+    for name in vendor_name:
+        if name != '':
+            like_conditions.append(f"rb.vendor_name LIKE '%%{name}%%'")
+
+    # Join all LIKE conditions with OR
+    if like_conditions:
+        q += " AND (" + " OR ".join(like_conditions) + ")"
+            
+    like_conditions = []
+    for single_location in location:
+        if single_location!='':
+            like_conditions.append(f"rb.location LIKE '%%{single_location}%%'")
+
+    # Join all LIKE conditions with OR
+    if like_conditions:
+        q += " AND (" + " OR ".join(like_conditions) + ")"
+        
+    like_conditions = []
+    for single_media_type in media_type:
+        if single_media_type!='':
+            like_conditions.append(f"rb.media_type LIKE '%%{single_media_type}%%'")
+
+    # Join all LIKE conditions with OR
+    if like_conditions:
+        q += " AND (" + " OR ".join(like_conditions) + ")"
+    
+    like_conditions = []
+    for illum in illumination:
+        if illum != '':
+            like_conditions.append(f"rb.illumination LIKE '%%{illum}%%'")
+    # Join all LIKE conditions with OR
+    if like_conditions:
+        q += " AND (" + " OR ".join(like_conditions) + ")"
+        
+        
+    q += """
+    ORDER BY area DESC, display_cost_per_month DESC, visibility_duration DESC, total_cost DESC, effective_impression DESC, efficiency DESC
+    """
+        
+        
     values = (
         zone_id, state_id, city_id, visibility_duration_min, visibility_duration_max,
         average_speed_min, average_speed_max, display_cost_per_month_min, display_cost_per_month_max,
@@ -359,11 +420,6 @@ ORDER BY area DESC, display_cost_per_month DESC, visibility_duration desc, total
     )
 
     billboards = query_db(q, values)
-    if billboards == None:
-        print(0)
-    else:
-        print(len(billboards))
-
     return jsonify(billboards), 200
 
 # else:
