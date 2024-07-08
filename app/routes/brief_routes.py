@@ -3,6 +3,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 import os
 import json
+import sys
 from pptx import Presentation
 from pptx.util import Inches
 from pptx.enum.shapes import MSO_SHAPE
@@ -19,6 +20,7 @@ brief_bp = Blueprint('brief', __name__)
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 osmo_logo_path = "./assets/Logo1.png"
+no_image_path = "./assets/no_image.png"
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -173,6 +175,8 @@ def getBriefs(current_user):
                     'campaign_obj': row['campaign_obj'],
                     'start_date': row['start_date'],
                     'status': row['status'],
+                    'first_name': row['first_name'],
+                    'last_name': row['last_name'],
                     'budgets': []
                 }
             if row['budget_id'] is not None:
@@ -194,7 +198,104 @@ def getBriefs(current_user):
     except Exception as e:
         print(e)
         return jsonify({'message': 'Something went wrong!'}), 500
+
+@brief_bp.route('/briefs/<brief_id>', methods=['PUT'])
+@token_required
+def edit_brief(current_user, brief_id):
+    data = request.form
+
+    current_user_id = current_user['id']
+
+    # assign data
+    category = clean_and_lower(data['category'])
+    brand_name = clean_and_lower(data['brand_name'])
+    target_aud = clean_and_lower(data['target_aud'])
+    camp_obj = clean_and_lower(data['camp_obj'])
+    med_app = clean_and_lower(data['med_app'])
+    is_immediate_camp = clean_and_lower(data['is_immediate_camp'])
+    start_date = data.get("start_date")
+    notes = data.get('notes')
+
+    budgets = data.get("budgets")
+    budgets = json.loads(budgets)
+
+    map_img_filename = data.get("old_image", None)
+
+    if notes != None or notes != "":
+        notes = clean_and_lower(notes) 
+
+    if start_date != None or start_date != "":
+        start_date = clean_and_lower(start_date) 
+
+    if 'brand_logo' in request.files:
+        logo_image_file = request.files['brand_logo']
+        if logo_image_file.filename != '':
+            map_img_filename = generate_uuid() + secure_filename(logo_image_file.filename)
+            logo_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
+
+    # validate data
+    if is_immediate_camp == 1 and not start_date:
+        return jsonify({"message" : "Campaing is immdiate and we require start date!"}) , 400
     
+    if start_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        if start_date <= datetime.now():
+            return jsonify({'message': 'Start date must be a future date'}), 400
+    
+    try:
+        query_db("START TRANSACTION", ())
+
+        brief_update_q = """
+                UPDATE `briefs`
+                SET
+                    category=%s, brand_name=%s, 
+                    brand_logo=%s, target_audience=%s, 
+                    campaign_obj=%s, media_approach=%s, 
+                    is_immediate_camp=%s, start_date=%s, 
+                    notes=%s, created_by_user_id=%s
+                WHERE
+                    brief_id=%s
+                
+        """
+
+        query_db(brief_update_q, (
+            category, brand_name, 
+            map_img_filename, target_aud, 
+            camp_obj, med_app, 
+            is_immediate_camp,start_date, 
+            notes, current_user_id,
+            brief_id
+        ), commit=True)
+
+        for budget in budgets:
+            zone_id = budget.get("zone_id")
+            state_id = budget.get("state_id")
+            city_id = budget.get("city_id")
+            budget_amt = budget.get("budget")
+
+            budget_id = budget.get("budget_id")
+
+            # only insert new budgets
+            if not budget_id:
+                budget_id = generate_uuid();
+
+                budget_insert_q = """
+                    INSERT INTO `brief_budgets` (`budget_id`, `brief_id`, `zone_id`, `state_id`, `city_id`, `budget`)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                query_db(budget_insert_q, (budget_id, brief_id, zone_id, state_id, city_id, budget_amt))
+        
+        current_app.mysql.connection.commit()
+
+        assign_brief_to_planners(brief_id)
+        
+        return jsonify({'message': 'Created successfully'}), 201
+    except Exception as e:
+        current_app.mysql.connection.rollback()
+        print(e)
+        return jsonify({'message': 'Something went wrong!'}), 500
+
+
 @brief_bp.route('/briefs/<brief_id>', methods=['DELETE'])
 @token_required
 def deleteBrief(current_user, brief_id):
@@ -469,7 +570,9 @@ def finish_budget_plan(current_user, budget_id, brief_id):
 def get_plans_by_brief_id(current_user, brief_id):
 
     q = """
-            SELECT p.*, z.zone_name, s.state_name, c.city_name FROM plans p
+            SELECT b.*, z.zone_name, s.state_name, c.city_name FROM plans p
+            INNER JOIN billboards b
+            ON b.id=p.billboard_id
             INNER JOIN brief_budgets bb 
             ON p.budget_id=bb.budget_id
             INNER JOIN zones z
@@ -529,13 +632,17 @@ def download_plan(current_user, brief_id):
         area_slide = create_area_slide(area_slide, brand_logo_path, budget['zone_name'], budget['state_name'], budget['city_name'])
 
         query = """
-            SELECT * FROM plans
-            WHERE budget_id=%s
+            SELECT b.* FROM plans
+            INNER JOIN billboards b ON b.id=plans.billboard_id
+            WHERE plans.budget_id=%s
         """
 
-        plans = query_db(query, (budget['budget_id'],))
+        assets = query_db(query, (budget['budget_id'],))
 
-        for plan in plans:
+        if not assets:
+            continue
+
+        for plan in assets:
             location  = plan['location']
             size_text = "Size: {}×{}".format(plan['height'], plan['width'])
 
@@ -571,6 +678,14 @@ def download_plan(current_user, brief_id):
 
             site_image_path = current_app.config['UPLOAD_FOLDER'] +"/"+ plan['site_image']
             map_image_path = current_app.config['UPLOAD_FOLDER'] +"/"+ plan['map_image']
+
+            if not os.path.exists(site_image_path):
+                site_image_path = no_image_path
+
+            if not os.path.exists(map_image_path):
+                map_image_path = no_image_path
+
+            print("image: ", site_image_path, file=sys.stdout)
 
             # site image
             left_inch = Inches(1)
