@@ -7,6 +7,11 @@ import uuid
 import os
 import math
 from app.constants.roles import roles
+import pptx
+from pptx import Presentation
+from pptx.enum.shapes import MSO_SHAPE_TYPE
+from pptx.util import Inches
+
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -96,3 +101,33 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     c = 2 * math.asin(math.sqrt(a))
     r = 6371000  # Radius of Earth in meters. Use 6371 for kilometers.
     return c * r
+
+
+def replace_image(prs, slide_index, image_index, new_image_path):
+   
+    slide = prs.slides[slide_index]
+    
+  
+    image_count = 0
+    old_image = None
+    for shape in slide.shapes:
+        if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+            if image_count == image_index:
+                old_image = shape
+                break
+            image_count += 1
+    # Save position and size of the old image
+    left = old_image.left
+    top = old_image.top
+    width = old_image.width
+    height = old_image.height
+    
+    # Remove the old image
+    slide.shapes._spTree.remove(old_image._element)
+    
+    # Add the new image in the same position
+    slide.shapes.add_picture(new_image_path, left, top, width, height)
+    
+    
+    
+  
