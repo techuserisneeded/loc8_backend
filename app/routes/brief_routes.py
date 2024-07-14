@@ -427,7 +427,7 @@ def getBriefBudgetDetailsByBudgetId(current_user, budget_id):
     average_speed_max = float(query.get("average_speed_max", 99999) or 99999)
     
     query = """
-            SELECT bb.budget_id, briefs.brief_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget, ab.status 
+            SELECT bb.budget_id, briefs.brief_id, bb.zone_id, bb.state_id, bb.city_id, zones.zone_name, states.state_name, cities.city_name, bb.budget, ab.status, ab.plan_ss 
             FROM assigned_budgets ab
             INNER JOIN brief_budgets bb ON ab.budget_id = bb.budget_id
             INNER JOIN briefs ON briefs.brief_id=bb.brief_id
@@ -595,6 +595,29 @@ def get_plans_by_brief_id(current_user, brief_id):
     return jsonify(plan_details), 200
 
 
+@brief_bp.route('/assigned-budget/<budget_id>/image', methods=['PUT'])
+@token_required
+def update_assigned_budget_image(current_user, budget_id):
+
+    current_user_id = current_user['id']
+
+    map_img_file = request.files['map_img']
+    map_img_filename = generate_uuid() + secure_filename(map_img_file.filename)
+
+    map_img_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
+    
+    q = """
+        UPDATE assigned_budgets
+        SET plan_ss=%s
+        WHERE user_id=%s AND budget_id=%s
+    """
+
+    query_db(q, (map_img_filename, current_user_id, budget_id), commit=True)
+
+    return jsonify({'message':'image updated successfully!'}), 200
+
+
+
 @brief_bp.route('/briefs/<brief_id>/download', methods=['GET'])
 @token_required
 def download_plan(current_user, brief_id):
@@ -604,38 +627,48 @@ def download_plan(current_user, brief_id):
     brief_details = get_brief_details_by_brief_id(brief_id)
 
     query = """
-        SELECT bb.*, zones.zone_name, states.state_name, cities.city_name
+        SELECT bb.*, zones.zone_name, states.state_name, cities.city_name, ab.plan_ss
         FROM brief_budgets bb
         INNER JOIN zones ON bb.zone_id = zones.zone_id
         INNER JOIN states ON bb.state_id = states.state_id
         INNER JOIN cities ON bb.city_id = cities.city_id
+        INNER JOIN assigned_budgets ab ON bb.budget_id=ab.budget_id
         WHERE bb.brief_id = %s
     """
 
     budgets = query_db(query, (brief_id,))
     
-    presentation_path = current_app.config['UPLOAD_FOLDER'] +"/new_input.pptx"
-    brand_logo_path = current_app.config['UPLOAD_FOLDER'] +"/"+ brief_details['brand_logo']
+    presentation_path = os.path.join(current_app.config['ASSETS_FOLDER'], "new_input.pptx")
+    brand_logo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], brief_details['brand_logo'])
         
     prs = Presentation(presentation_path)
     
     replace_image(prs, 0 , 0, brand_logo_path)
     
     for budget in budgets:
-        text = [budget['zone_name'] + " | " + budget['state_name'] + " | " + budget['city_name']]
-        secondPage(prs, text, brand_logo_path)
+
+        # ALTER TABLE assigned_budgets ADD COLUMN plan_ss VARCHAR(300) NULL
+
+        texts = [budget['zone_name'] + " | " + budget['state_name'] + " | " + budget['city_name']]
+
+        if not budget['plan_ss']:
+            budget_img_path = os.path.join(current_app.config['ASSETS_FOLDER'], "no_image.png")
+        else:
+            budget_img_path = os.path.join(current_app.config['UPLOAD_FOLDER'], budget['plan_ss'])
+
+        secondPage(prs, texts, budget_img_path)
         
         query = """
             SELECT b.* FROM plans
             INNER JOIN billboards b ON b.id=plans.billboard_id
             WHERE plans.budget_id=%s
         """
-        assets = query_db(query, (budget['budget_id'],))
+        plans = query_db(query, (budget['budget_id'],))
 
-        if not assets:
+        if not plans:
             continue
 
-        for plan in assets:
+        for plan in plans:
             location  = plan['location']
             size_text = "Size: {}×{}".format(plan['height'], plan['width'])
             
@@ -669,10 +702,6 @@ def download_plan(current_user, brief_id):
         mimetype="application/vnd.openxmlformats-officedocument.presentationml.presentation"
     )
     
-    
-    
-       
-
 
 #     prs = Presentation()
 

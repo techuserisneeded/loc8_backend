@@ -25,3 +25,4 @@ class AppConfig:
     MYSQL_PASSWORD = MYSQL_PASSWORD
     MYSQL_DB = MYSQL_DB
     UPLOAD_FOLDER = "./app/uploads"
+    ASSETS_FOLDER = "./assets"
