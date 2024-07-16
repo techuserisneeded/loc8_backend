@@ -640,6 +640,9 @@ def download_plan(current_user, brief_id):
     
     presentation_path = os.path.join(current_app.config['ASSETS_FOLDER'], "new_input.pptx")
     brand_logo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], brief_details['brand_logo'])
+
+    if not os.path.exists(brand_logo_path):
+        brand_logo_path = os.path.join(current_app.config['ASSETS_FOLDER'], "no_image.png")
         
     prs = Presentation(presentation_path)
     

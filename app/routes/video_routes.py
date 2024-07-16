@@ -532,7 +532,6 @@ def get_asset_info(current_user, billboard_id):
 
     return jsonify({"asset" : billboard, "video_coordinates" : video_coordinates, "video": video}), 200
     
-
 @video_bp.route('/billboards/delete', methods=['POST'])
 @token_required
 def delete_billboards(current_user):
