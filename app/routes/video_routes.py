@@ -448,8 +448,13 @@ def add_asset_info(current_user, billboard_id):
 
     cost_for_duration = (rental_per_month * duration) / 30
 
-    map_img_filename = None
-    site_img_filename = None
+    asset_data = query_db("SELECT * FROM billboards WHERE id=%s", (billboard_id,), one=True)
+
+    map_img_filename = asset_data.get("map_image") or None
+    site_img_filename = asset_data.get("site_image") or None
+
+    map_image_file = None
+    site_image_file = None
 
     if 'map_image' in request.files:
         map_image_file = request.files['map_image']
@@ -497,10 +502,10 @@ def add_asset_info(current_user, billboard_id):
 
     query_db(query, args, True, True)
 
-    if(map_img_filename):
+    if map_image_file:
         map_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], map_img_filename))
     
-    if(site_img_filename):
+    if site_image_file:
         site_image_file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], site_img_filename))
 
     return jsonify({'message': 'Plan added successfully'}), 201

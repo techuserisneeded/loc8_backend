@@ -309,24 +309,52 @@ def deleteBrief(current_user, brief_id):
         return jsonify({
             'message': "You cannot delete this brief!",
         }), 401
+    
+    try:
+        query_db("START TRANSACTION")
 
-    q = """
-        DELETE FROM brief_budgets WHERE brief_id=%s
-    """
+        q = """
+            DELETE FROM plans WHERE brief_id=%s
+        """
 
-    query_db(q, (brief_id,))
+        query_db(q, (brief_id,))
+        
+        q = """
+            SELECT * FROM brief_budgets WHERE brief_id=%s
+        """
+        
+        brief_budgets = query_db(q, (brief_id,))
 
-    q = """
-        DELETE FROM briefs WHERE brief_id=%s
-    """
+        for bb in brief_budgets:
+            budget_id = bb['budget_id']
+            q = """
+                DELETE FROM assigned_budgets WHERE budget_id=%s
+            """
+            query_db(q, (budget_id,))
 
-    query_db(q, (brief_id,))
+        q = """
+            DELETE FROM brief_budgets WHERE brief_id=%s
+        """
 
-    current_app.mysql.connection.commit()
+        query_db(q, (brief_id,))
 
-    os.remove(os.path.join(current_app.config['UPLOAD_FOLDER'], brief_data['brand_logo']))
+        q = """
+            DELETE FROM briefs WHERE brief_id=%s
+        """
 
-    return jsonify({"message": "Deleted Successfully!"}), 200
+        query_db(q, (brief_id,))
+
+        current_app.mysql.connection.commit()
+
+        brand_logo_path = os.path.join(current_app.config['UPLOAD_FOLDER'], brief_data['brand_logo'])
+
+        if os.path.exists(brand_logo_path):
+            os.remove(brand_logo_path)
+
+        return jsonify({"message": "Deleted Successfully!"}), 200
+    except Exception:
+        query_db("ROLLBACK")
+        return jsonify({"message": "Something went wrong!"}), 500
 
 @brief_bp.route('/briefs/<brief_id>', methods=['GET'])
 @token_required
