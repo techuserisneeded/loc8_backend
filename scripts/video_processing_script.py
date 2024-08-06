@@ -99,7 +99,7 @@ def calculate_bbox_area(box,image_width,image_height):
     x1, y1, x2, y2 = box
     width = x2 - x1
     height = y2 - y1
-    return ((width * height)* 100)/(0.1 *image_width * image_height)
+    return ((width * height)* 100)/(0.2 *image_width * image_height)
 
 def get_region(box, image_width,image_height):
   x1,y1,x2,y2 = box

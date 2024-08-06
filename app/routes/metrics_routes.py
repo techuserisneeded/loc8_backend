@@ -23,7 +23,7 @@ metrics_bp = Blueprint('metrics', __name__)
 def estimate_impression(current_user):
     try:
         q = '''
-        SELECT COALESCE(latitude, 0) AS latitude, COALESCE(longitude, 0) AS longitude, id, impression_id, effective_impression, net_saliency_score_city
+        SELECT COALESCE(latitude, 0) AS latitude, COALESCE(longitude, 0) AS longitude, id, impression_id, impression, effective_impression, net_saliency_score_city
         FROM billboards as b
         '''
         billboard = query_db(q)
@@ -53,9 +53,9 @@ def estimate_impression(current_user):
                     
                     effective_impression_val = bill.get('net_saliency_score_city')*impression.get('impression')
                     q = '''UPDATE billboards
-                    SET impression_id = %s, effective_impression = %s
+                    SET impression_id = %s, impression = %s, effective_impression = %s
                     where id= %s'''
-                    query_db(q, (impression.get('impression_id'),effective_impression_val, bill.get('id')))
+                    query_db(q, (impression.get('impression_id'),impression.get('impression'),effective_impression_val, bill.get('id')))
                     query_db("COMMIT")
                     break
         return jsonify({'message': 'Impression Estimated Successfully'}), 201 
@@ -82,9 +82,7 @@ def add_impression(current_user):
             numbers = [float(num) for num in numbers]
             if len(numbers) == 14 and impression and type(numbers[0]) == float and type(numbers[1]) == float and type(numbers[2]) == float and type(numbers[3]) == float and type(numbers[4]) == float and type(numbers[5]) == float and type(numbers[6]) == float and type(numbers[7]) == float and type(numbers[8]) == float and type(numbers[9]) == float and type(numbers[10]) == float and type(numbers[11]) == float and type(numbers[12]) == float and type(numbers[13]) == float:            
                 long1  = numbers[0],
-                
                 lat1 = numbers[1],
-                
                 long2  = numbers[2],
                 lat2 = numbers[3],
                 long3  = numbers[4],
@@ -162,7 +160,6 @@ def calculate_efficiency(current_user):
 @metrics_bp.route('/saliency', methods=['POST'])
 @token_required
 def calculate_saliency(current_user):
-
     body = request.get_json()
     zone_id = body.get("zone_id")
     state_id = body.get("state_id")
@@ -172,7 +169,7 @@ def calculate_saliency(current_user):
     body_weights_front = body.get("front_weightings", {})
     body_weights_rear = body.get("rear_weightings", {})
 
-    print(is_city_checked, is_location_checked)
+    # print(is_city_checked, is_location_checked)
 
     weights_front = {
         "distance_to_center": body_weights_front.get("distance_to_center") or default_weights_front.get("distance_to_center"),
@@ -205,7 +202,6 @@ def calculate_saliency(current_user):
             WHERE
                 v.city_id=%s
     """
-
     billboards = query_db(billoards_q, (city_id,))
 
     try:
@@ -263,19 +259,21 @@ def calculate_saliency(current_user):
                         id=%s
                 """
                 query_db(q, (saliency_front, saliency_rear, saliency_net, bill_id))
-
-            query_db("COMMIT")
-            
-
         # Ranking Net Saliency citywise
-        billoards_q =   '''
-        SELECT b.id,b.net_saliency_score_city,RANK() 
-        OVER ( ORDER BY net_saliency_score_city DESC) as rank_net_saliency_citywise 
-        FROM billboards b JOIN videofiles v
-        where v.city_id = %s
-        '''
+        billoards_q = '''
+    WITH DistinctBillboards AS (
+        SELECT DISTINCT b.id, b.net_saliency_score_city
+        FROM billboards b
+        JOIN videofiles v ON b.video_id = v.video_id
+        WHERE v.city_id = %s
+    )
+    SELECT id, net_saliency_score_city,
+    RANK() OVER (ORDER BY net_saliency_score_city DESC) as rank_net_saliency_citywise
+    FROM DistinctBillboards;
+'''
+
         billboard = query_db(billoards_q, (city_id,))
-        query_db("START TRANSACTION")
+        
         if billboard is not None:    
             for bill in billboard:
                 bill_id = bill.get("id")
@@ -287,43 +285,45 @@ def calculate_saliency(current_user):
                     id=%s
                 """
                 query_db(q, (bill.get('rank_net_saliency_citywise'),bill_id))
-            query_db("COMMIT")
-
-
         # Front saliency Ranking citywise
         billoards_q =   '''
-        SELECT b.id,b.saliency_score_front_city,RANK() 
-        OVER ( ORDER BY saliency_score_front_city DESC) as rank_front_saliency_citywise 
-        FROM billboards b JOIN videofiles v
-        where v.city_id = %s
+        WITH DistinctBillboards AS (
+        SELECT DISTINCT b.id, b.saliency_score_front_city
+        FROM billboards b
+        JOIN videofiles v ON b.video_id = v.video_id
+        WHERE v.city_id = %s
+    )
+    SELECT id, saliency_score_front_city,
+    RANK() OVER (ORDER BY saliency_score_front_city DESC) as Rank_front_saliency_citywise
+    FROM DistinctBillboards;
         '''
-
         billboard = query_db(billoards_q, (city_id,))
         
-        query_db("START TRANSACTION")
         for bill in billboard:
             bill_id = bill.get("id")
             q = """
             UPDATE billboards 
             SET 
-                rank_front_saliency_citywise=%s
+                Rank_front_saliency_citywise=%s
             WHERE
                 id=%s
             """
-            query_db(q, (bill.get('rank_front_saliency_citywise'),bill_id))
-        query_db("COMMIT")
-
+            query_db(q, (bill.get('Rank_front_saliency_citywise'),bill_id))
 
         # rear saliency ranking citywise
         billoards_q =   '''
-        SELECT b.id,b.saliency_score_rear_city,RANK() 
-        OVER ( ORDER BY saliency_score_rear_city DESC) as rank_rear_saliency_citywise 
-        FROM billboards b JOIN videofiles v
-        where v.city_id = %s
+        WITH DistinctBillboards AS (
+        SELECT DISTINCT b.id, b.saliency_score_rear_city
+        FROM billboards b
+        JOIN videofiles v ON b.video_id = v.video_id
+        WHERE v.city_id = %s
+    )
+    SELECT id, saliency_score_rear_city,
+    RANK() OVER (ORDER BY saliency_score_rear_city DESC) as rank_rear_saliency_citywise
+    FROM DistinctBillboards;
         '''
         billboard = query_db(billoards_q, (city_id,))
         
-        query_db("START TRANSACTION")
         for bill in billboard:
             bill_id = bill.get("id")
             q = """
@@ -343,6 +343,7 @@ def calculate_saliency(current_user):
 
 
     try:
+        query_db("START TRANSACTION")
         if is_location_checked == True:
             billoards_q = """
                         SELECT DISTINCT
@@ -387,7 +388,7 @@ def calculate_saliency(current_user):
                                 id=%s
                             """
                             query_db(q, (res.get('rank_saliency_rear_locationwise'),res_id))
-                        query_db("COMMIT")
+                 
 
                     ##Rank front saliency locationwise
                     billoards_q = """
@@ -413,7 +414,6 @@ def calculate_saliency(current_user):
                             id=%s
                         """
                         query_db(q, (res.get('rank_saliency_front_locationwise'),res_id))
-                    query_db("COMMIT")
 
                 ##Ranking Net saliency locationwise
                     billoards_q = """
@@ -439,7 +439,7 @@ def calculate_saliency(current_user):
                             id=%s
                         """
                         query_db(q, (res.get('rank_net_saliency_locationwise'),res_id))
-                query_db("COMMIT")
+        query_db("COMMIT")
 
     except Exception as e:
         print(str(e))

@@ -616,6 +616,7 @@ def get_plans_by_brief_id(current_user, brief_id):
     args=(brief_id,)
 
     plan_details = query_db(q, args)
+    
 
     if plan_details == None:
        return jsonify([]), 200

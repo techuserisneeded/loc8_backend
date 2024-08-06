@@ -290,6 +290,7 @@ def get_media_data(current_user):
     top_net_saliency_locationwise = int(data.get("top_net_saliency_locationwise", 100000) or 100000)
     top_effective_impressions = int(data.get("top_effective_impressions", 100000) or 100000)
     top_efficiency = int(data.get("top_efficiency", 100000) or 100000)
+    top_impressions = int(data.get("top_impressions", 100000) or 100000)
 
     # if location is not None:
         # q = """
@@ -339,7 +340,6 @@ def get_media_data(current_user):
     q = """
 ranked_billboards AS (
     SELECT *,
-    
         ROW_NUMBER() OVER (ORDER BY saliency_score_front_city DESC) AS rank_saliency_front_citywise,
         ROW_NUMBER() OVER (ORDER BY saliency_score_rear_city DESC) AS rank_saliency_rear_citywise,
         ROW_NUMBER() OVER (ORDER BY net_saliency_score_city DESC) AS rank_saliency_net_citywise,
@@ -347,7 +347,8 @@ ranked_billboards AS (
         ROW_NUMBER() OVER (ORDER BY rental_per_month DESC) AS rank_display_cost_per_month,
         ROW_NUMBER() OVER (ORDER BY visibility_duration DESC) AS rank_visibility_duration,
         ROW_NUMBER() OVER (ORDER BY effective_impression DESC) AS rank_effective_impression,
-        ROW_NUMBER() OVER (ORDER BY efficiency DESC) AS rank_efficiency
+        ROW_NUMBER() OVER (ORDER BY efficiency DESC) AS rank_efficiency,
+        ROW_NUMBER() OVER (ORDER BY impression DESC) AS rank_impressions
     FROM city_filtered
 )
 SELECT *
@@ -356,14 +357,12 @@ WHERE
     (rb.rank_saliency_front_citywise <= %s OR %s IS NULL) 
     AND (rb.rank_saliency_rear_citywise <= %s OR %s IS NULL) 
     AND (rb.rank_saliency_net_citywise <= %s OR %s IS NULL) 
-    AND rb.rank_saliency_front_locationwise <= %s
-    AND rb.rank_saliency_rear_locationwise <= %s
-    AND rb.rank_net_saliency_locationwise <= %s
     AND (rb.rank_area <= %s OR %s IS NULL) 
     AND (rb.rank_display_cost_per_month <= %s OR %s IS NULL)
     AND (rb.rank_visibility_duration <= %s OR %s IS NULL)
     AND (rb.rank_effective_impression <= %s OR %s IS NULL)
     AND (rb.rank_efficiency <= %s OR %s IS NULL)
+    AND (rb.rank_impressions <= %s OR %s IS NULL)
     """
     like_conditions = []
     for name in vendor_name:
@@ -402,17 +401,20 @@ WHERE
         
     qq += '''),'''
     q += """
-    ORDER BY saliency_score_front_city DESC, saliency_score_front_city DESC, net_saliency_score_city DESC, area DESC, rental_per_month DESC, visibility_duration DESC, total_cost DESC, effective_impression DESC, efficiency DESC
+    ORDER BY saliency_score_front_city DESC, saliency_score_front_city DESC, net_saliency_score_city DESC, area DESC, rental_per_month DESC, visibility_duration DESC, total_cost DESC, effective_impression DESC, efficiency DESC, impression DESC
     """
     qq += q
     # print("Query", qq)
     values = (
         zone_id, state_id, city_id, visibility_duration_min, visibility_duration_max,
         average_speed_min, average_speed_max, display_cost_per_month_min, display_cost_per_month_max, area_min, area_max,
-        top_front_saliency_citywise,top_front_saliency_citywise, top_rear_saliency_citywise, top_rear_saliency_citywise, top_net_saliency_citywise,top_net_saliency_citywise, top_front_saliency_locationwise, top_rear_saliency_locationwise
-        ,top_net_saliency_locationwise,top_area, top_area, top_display_cost_per_month, top_display_cost_per_month, top_visibility_duration, top_visibility_duration, top_effective_impressions, top_effective_impressions, top_efficiency, top_efficiency
+        top_front_saliency_citywise,top_front_saliency_citywise, top_rear_saliency_citywise, top_rear_saliency_citywise, top_net_saliency_citywise,top_net_saliency_citywise,top_area, top_area, top_display_cost_per_month, top_display_cost_per_month, top_visibility_duration, top_visibility_duration, top_effective_impressions, top_effective_impressions, top_efficiency, 
+        top_efficiency, top_impressions, top_impressions
     )
     billboards = query_db(qq, values)
+    
+    
+    
     
     temp = '''CREATE TEMPORARY TABLE temp_filtered_billboards (
   id varchar(36) NOT NULL,
@@ -479,7 +481,8 @@ rank_area int(11) NOT NULL DEFAULT 0,
  rank_display_cost_per_month int(11) NOT NULL DEFAULT 0, 
 rank_visibility_duration int(11) NOT NULL DEFAULT 0,
  rank_effective_impression int(11) NOT NULL DEFAULT 0, 
-rank_efficiency int(11) NOT NULL DEFAULT 0 
+rank_efficiency int(11) NOT NULL DEFAULT 0,
+rank_impressions int(11) NOT NULL DEFAULT 0
 );
 '''
     query_db(temp)
@@ -487,159 +490,166 @@ rank_efficiency int(11) NOT NULL DEFAULT 0
     # Assuming 'billboards' is a list of dictionaries, each representing a row.
 # Adjust the field names to match your actual data structure.
 
-    for billboard in billboards:
-        temp = '''INSERT INTO temp_filtered_billboards (
-            id, video_id, visibility_duration, distance_to_center, central_duration, near_p_duration, 
-            mid_p_duration, far_p_duration, central_distance, near_p_distance, mid_p_distance, 
-            far_p_distance, average_areas, confidence, tracker_id, created_at, created_by_user_id, 
-            latitude, longitude, vendor_name, location, traffic_direction, media_type, illumination, 
-            width, height, quantity, area, display_cost_per_month, printing_rate, mounting_rate, 
-            printing_cost, mounting_cost, total_cost, site_image, map_image, focal_vision_duration, 
-            saliency_score_front_city, saliency_score_rear_city, net_saliency_score_city, duration, 
-            rental_per_month, cost_for_duration, Rank_net_saliency_citywise, rank_saliency_front_locationwise, 
-            rank_saliency_rear_locationwise, rank_net_saliency_locationwise, Rank_front_saliency_citywise, 
-            Rank_rear_saliency_citywise, efficiency, impression_id, effective_impression, zone_id, state_id ,
-  city_id , average_speed, rank_saliency_front_citywise, rank_saliency_rear_citywise, 
-   rank_saliency_net_citywise, rank_area,rank_display_cost_per_month, 
-rank_visibility_duration, rank_effective_impression, rank_efficiency 
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s, %s, %s,
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-        %s);
-        '''
-        values = (
-            billboard['id'], billboard['video_id'], billboard['visibility_duration'], billboard['distance_to_center'],
-            billboard['central_duration'], billboard['near_p_duration'], billboard['mid_p_duration'], 
-            billboard['far_p_duration'], billboard['central_distance'], billboard['near_p_distance'], 
-            billboard['mid_p_distance'], billboard['far_p_distance'], billboard['average_areas'], 
-            billboard['confidence'], billboard['tracker_id'], billboard['created_at'], billboard['created_by_user_id'], 
-            billboard['latitude'], billboard['longitude'], billboard['vendor_name'], billboard['location'], 
-            billboard['traffic_direction'], billboard['media_type'], billboard['illumination'], billboard['width'], 
-            billboard['height'], billboard['quantity'], billboard['area'], billboard['display_cost_per_month'], 
-            billboard['printing_rate'], billboard['mounting_rate'], billboard['printing_cost'], billboard['mounting_cost'], 
-            billboard['total_cost'], billboard['site_image'], billboard['map_image'], billboard['focal_vision_duration'], 
-            billboard['saliency_score_front_city'], billboard['saliency_score_rear_city'], billboard['net_saliency_score_city'], 
-            billboard['duration'], billboard['rental_per_month'], billboard['cost_for_duration'], 
-            billboard['Rank_net_saliency_citywise'], billboard['rank_saliency_front_locationwise'], 
-            billboard['rank_saliency_rear_locationwise'], billboard['rank_net_saliency_locationwise'], 
-            billboard['Rank_front_saliency_citywise'], billboard['Rank_rear_saliency_citywise'], billboard['efficiency'], 
-            billboard['impression_id'], billboard['effective_impression'], billboard['zone_id'], billboard['state_id'], billboard['city_id'],
-            billboard['average_speed'], billboard['rank_saliency_front_citywise'], billboard['rank_saliency_rear_citywise'], 
-   billboard['rank_saliency_net_citywise'], billboard['rank_area'],billboard['rank_display_cost_per_month'], 
-billboard['rank_visibility_duration'], billboard['rank_effective_impression'], billboard['rank_efficiency'] 
-        )
-        query_db(temp, values)
-    query_db("COMMIT")
-    
-    
-    billoards_q = """
-                        SELECT DISTINCT
-                    CASE
-                        WHEN b.location IS NULL THEN NULL
+    if billboards is not None:
+        
+        for billboard in billboards:        
+            temp = '''INSERT INTO temp_filtered_billboards (
+                id, video_id, visibility_duration, distance_to_center, central_duration, near_p_duration, 
+                mid_p_duration, far_p_duration, central_distance, near_p_distance, mid_p_distance, 
+                far_p_distance, average_areas, confidence, tracker_id, created_at, created_by_user_id, 
+                latitude, longitude, vendor_name, location, traffic_direction, media_type, illumination, 
+                width, height, quantity, area, display_cost_per_month, printing_rate, mounting_rate, 
+                printing_cost, mounting_cost, total_cost, site_image, map_image, focal_vision_duration, 
+                saliency_score_front_city, saliency_score_rear_city, net_saliency_score_city, duration, 
+                rental_per_month, cost_for_duration, Rank_net_saliency_citywise, rank_saliency_front_locationwise, 
+                rank_saliency_rear_locationwise, rank_net_saliency_locationwise, Rank_front_saliency_citywise, 
+                Rank_rear_saliency_citywise, efficiency, impression_id, effective_impression, zone_id, state_id ,
+    city_id , average_speed, rank_saliency_front_citywise, rank_saliency_rear_citywise, 
+    rank_saliency_net_citywise, rank_area,rank_display_cost_per_month, 
+    rank_visibility_duration, rank_effective_impression, rank_efficiency, rank_impressions 
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+            %s, %s);
+            '''
+            values = (
+                billboard['id'], billboard['video_id'], billboard['visibility_duration'], billboard['distance_to_center'],
+                billboard['central_duration'], billboard['near_p_duration'], billboard['mid_p_duration'], 
+                billboard['far_p_duration'], billboard['central_distance'], billboard['near_p_distance'], 
+                billboard['mid_p_distance'], billboard['far_p_distance'], billboard['average_areas'], 
+                billboard['confidence'], billboard['tracker_id'], billboard['created_at'], billboard['created_by_user_id'], 
+                billboard['latitude'], billboard['longitude'], billboard['vendor_name'], billboard['location'], 
+                billboard['traffic_direction'], billboard['media_type'], billboard['illumination'], billboard['width'], 
+                billboard['height'], billboard['quantity'], billboard['area'], billboard['display_cost_per_month'], 
+                billboard['printing_rate'], billboard['mounting_rate'], billboard['printing_cost'], billboard['mounting_cost'], 
+                billboard['total_cost'], billboard['site_image'], billboard['map_image'], billboard['focal_vision_duration'], 
+                billboard['saliency_score_front_city'], billboard['saliency_score_rear_city'], billboard['net_saliency_score_city'], 
+                billboard['duration'], billboard['rental_per_month'], billboard['cost_for_duration'], 
+                billboard['Rank_net_saliency_citywise'], billboard['rank_saliency_front_locationwise'], 
+                billboard['rank_saliency_rear_locationwise'], billboard['rank_net_saliency_locationwise'], 
+                billboard['Rank_front_saliency_citywise'], billboard['Rank_rear_saliency_citywise'], billboard['efficiency'], 
+                billboard['impression_id'], billboard['effective_impression'], billboard['zone_id'], billboard['state_id'], billboard['city_id'],
+                billboard['average_speed'], billboard['rank_saliency_front_citywise'], billboard['rank_saliency_rear_citywise'], 
+    billboard['rank_saliency_net_citywise'], billboard['rank_area'],billboard['rank_display_cost_per_month'], 
+    billboard['rank_visibility_duration'], billboard['rank_effective_impression'], billboard['rank_efficiency'], billboard['rank_impressions'] 
+            )
+            query_db(temp, values)
+        
+        
+        
+        billoards_q = """
+                            SELECT DISTINCT
+                        CASE
+                            WHEN b.location IS NULL THEN NULL
+                            WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
+                            ELSE b.location
+                        END AS location
+                    FROM temp_filtered_billboards AS b
+                """
+        billboards = query_db(billoards_q)
+        
+      
+        for bill in billboards: 
+            unique_location = bill.get('location')
+            if unique_location != None:
+
+                ##Rank rear saliency locationwise
+                billoards_q = """
+                        Select
+                        b.id,b.location, b.saliency_score_rear_city, RANK()
+                        OVER ( ORDER BY saliency_score_rear_city DESC) as rank_saliency_rear_locationwise 
+                        FROM temp_filtered_billboards as b 
+                        WHERE 
+                        CASE
                         WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
                         ELSE b.location
-                    END AS location
-                FROM temp_filtered_billboards AS b
-            """
-    billboards = query_db(billoards_q)
+                    END = %s; 
+                        """
+                resultant = query_db(billoards_q, (unique_location,))
+                if resultant is not None:
+                    for res in resultant:
+                        res_id = res.get('id')
+                        q = """
+                        UPDATE temp_filtered_billboards 
+                        SET 
+                            rank_saliency_rear_locationwise=%s
+                        WHERE
+                            id=%s
+                        """
+                        query_db(q, (res.get('rank_saliency_rear_locationwise'),res_id))
+                    query_db("COMMIT")
 
-    for bill in billboards: 
-        unique_location = bill.get('location')
-        if unique_location != None:
-
-            ##Rank rear saliency locationwise
-            billoards_q = """
-                    Select
-                    b.id,b.location, b.saliency_score_rear_city, RANK()
-                    OVER ( ORDER BY saliency_score_rear_city DESC) as rank_saliency_rear_locationwise 
-                    FROM temp_filtered_billboards as b 
-                    WHERE 
-                    CASE
-                    WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
-                    ELSE b.location
-                END = %s; 
-                    """
-            resultant = query_db(billoards_q, (unique_location,))
-            if resultant is not None:
-                for res in resultant:
-                    res_id = res.get('id')
-                    q = """
-                    UPDATE temp_filtered_billboards 
-                    SET 
-                        rank_saliency_rear_locationwise=%s
-                    WHERE
-                        id=%s
-                    """
-                    query_db(q, (res.get('rank_saliency_rear_locationwise'),res_id))
-                query_db("COMMIT")
-
-            ##Rank front saliency locationwise
-            billoards_q = """
-                    Select
-                    b.id,b.location, b.saliency_score_front_city, RANK()
-                    OVER ( ORDER BY saliency_score_front_city DESC) as rank_saliency_front_locationwise 
-                    FROM temp_filtered_billboards as b
-                    WHERE
-                    CASE
-                    WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
-                    ELSE b.location
-                END = %s; 
-                    """
-            resultant = query_db(billoards_q, (unique_location,))
-
-            for res in resultant:
-                res_id = res.get("id")
-                q = """
-                UPDATE temp_filtered_billboards 
-                SET 
-                    rank_saliency_front_locationwise=%s
-                WHERE
-                    id=%s
-                """
-                query_db(q, (res.get('rank_saliency_front_locationwise'),res_id))
-            query_db("COMMIT")
-
-        ##Ranking Net saliency locationwise
-            billoards_q = """
+                ##Rank front saliency locationwise
+                billoards_q = """
                         Select
-                        b.id, b.location, b.net_saliency_score_city, RANK()
-                        OVER ( ORDER BY net_saliency_score_city DESC) as rank_net_saliency_locationwise 
+                        b.id,b.location, b.saliency_score_front_city, RANK()
+                        OVER ( ORDER BY saliency_score_front_city DESC) as rank_saliency_front_locationwise 
                         FROM temp_filtered_billboards as b
                         WHERE
                         CASE
-                    WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
-                    ELSE b.location
-                        END = %s;   
+                        WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
+                        ELSE b.location
+                    END = %s; 
                         """
-            resultant = query_db(billoards_q, (unique_location,))
+                resultant = query_db(billoards_q, (unique_location,))
 
-            for res in resultant:
-                res_id = res.get("id")
-                q = """
-                UPDATE temp_filtered_billboards
-                SET 
-                    rank_net_saliency_locationwise=%s
-                WHERE
-                    id=%s
-                """
-                query_db(q, (res.get('rank_net_saliency_locationwise'),res_id))
-        query_db("COMMIT")
+                for res in resultant:
+                    res_id = res.get("id")
+                    q = """
+                    UPDATE temp_filtered_billboards 
+                    SET 
+                        rank_saliency_front_locationwise=%s
+                    WHERE
+                        id=%s
+                    """
+                    query_db(q, (res.get('rank_saliency_front_locationwise'),res_id))
+                query_db("COMMIT")
 
-    final_q = '''
-    Select * 
-    from temp_filtered_billboards
-    where rank_net_saliency_locationwise <= %s or %s is NULL AND
-    rank_saliency_front_locationwise <= %s or %s is NULL AND
-    rank_saliency_rear_locationwise <= %s or %s is NULL
-    '''
-    
-    billboards = query_db(final_q, (top_net_saliency_locationwise, top_net_saliency_locationwise, top_front_saliency_locationwise, top_front_saliency_locationwise, top_rear_saliency_locationwise, top_rear_saliency_locationwise))
-    
-    # print(billboards)
+            ##Ranking Net saliency locationwise
+                billoards_q = """
+                            Select
+                            b.id, b.location, b.net_saliency_score_city, RANK()
+                            OVER ( ORDER BY net_saliency_score_city DESC) as rank_net_saliency_locationwise 
+                            FROM temp_filtered_billboards as b
+                            WHERE
+                            CASE
+                        WHEN INSTR(b.location, ',') > 0 THEN LEFT(b.location, INSTR(b.location, ',') - 1)
+                        ELSE b.location
+                            END = %s;   
+                            """
+                resultant = query_db(billoards_q, (unique_location,))
+
+                for res in resultant:
+                    res_id = res.get("id")
+                    q = """
+                    UPDATE temp_filtered_billboards
+                    SET 
+                        rank_net_saliency_locationwise=%s
+                    WHERE
+                        id=%s
+                    """
+                    query_db(q, (res.get('rank_net_saliency_locationwise'),res_id))
+            query_db("COMMIT")
+            
+            
+        
+        final_q = '''
+        Select * 
+        from temp_filtered_billboards
+        where (rank_net_saliency_locationwise <= %s or %s is NULL)
+        AND
+        (rank_saliency_front_locationwise <= %s or %s is NULL)
+        AND
+        (rank_saliency_rear_locationwise <= %s or %s is NULL)
+        '''
+        
+        billboards = query_db(final_q, (top_net_saliency_locationwise, top_net_saliency_locationwise, top_front_saliency_locationwise, top_front_saliency_locationwise, top_rear_saliency_locationwise, top_rear_saliency_locationwise))
+        print(billboards)
+
     return jsonify(billboards), 200
 
 
