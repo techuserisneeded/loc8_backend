@@ -254,36 +254,56 @@ def add_user(current_user):
 @token_required
 def delete_user(current_user,user_id):
 
-    current_user_id = current_user['id']
-    user_role_id = current_user['role_id']
+    try:
 
-    if user_role_id == roles.get("SUPERADMIN"):
-        query = "DELETE FROM users WHERE id = %s"
-        args=(user_id,)
-        query_db(query, args, False, True)
+        current_user_id = current_user['id']
+        user_role_id = current_user['role_id']
 
-        return jsonify({'message': 'user deleted successfully'}), 200
-    
-    if user_role_id == roles.get("ADMIN"):
-        # check if email exists!
-        user_q = """
-            SELECT * FROM users WHERE id=%s
-        """
-        ext_user = query_db(user_q, (user_id,), True)
+        if user_role_id == roles.get("SUPERADMIN"):
 
-        if ext_user == None:
-            return jsonify({'message': 'User does not exist!'}), 400
+            query = "DELETE FROM user_areas WHERE user_id = %s"
+            args=(user_id,)
+            query_db(query, args, False)
 
-        if ext_user['created_by_user_id'] != current_user_id:
-            return jsonify({'message': 'You cannot delete this user!'}), 400
+            query = "DELETE FROM users WHERE id = %s"
+            args=(user_id,)
+            query_db(query, args, False)
+
+            query_db("COMMIT")
+
+            return jsonify({'message': 'user deleted successfully'}), 200
         
-        query = "DELETE FROM users WHERE id = %s"
-        args=(user_id,)
-        query_db(query, args, False, True)
+        if user_role_id == roles.get("ADMIN"):
+            # check if email exists!
+            user_q = """
+                SELECT * FROM users WHERE id=%s
+            """
+            ext_user = query_db(user_q, (user_id,), True)
 
-        return jsonify({'message': 'user deleted successfully'}), 200
-    
-    return jsonify({'message': 'You dont have access!'}), 400
+            if ext_user == None:
+                return jsonify({'message': 'User does not exist!'}), 400
+
+            if ext_user['created_by_user_id'] != current_user_id:
+                return jsonify({'message': 'You cannot delete this user!'}), 400
+            
+
+            query = "DELETE FROM user_areas WHERE user_id = %s"
+            args=(user_id,)
+            query_db(query, args, False)
+
+            query = "DELETE FROM users WHERE id = %s"
+            args=(user_id,)
+            query_db(query, args, False)
+
+            query_db("COMMIT")
+
+            return jsonify({'message': 'user deleted successfully'}), 200
+        
+        return jsonify({'message': 'You dont have access!'}), 400
+
+    except Exception as e:
+        query_db("ROLLBACK")
+        return jsonify({'error': str(e)}), 500
 
 @admin_bp.route('/admins/<int:user_id>', methods=['PUT'])
 @token_required
