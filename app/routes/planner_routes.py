@@ -168,7 +168,7 @@ def assignAreas(current_user, user_id):
 
         users = query_db(q, args)
 
-        if users != None:
+        if users!=None and (len(users)>1 or user_id!= users[0]['user_id']):
             return jsonify({"message": "A Planner with this zone-state-city is already assigned!"}), 400
         
     try:

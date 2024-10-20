@@ -702,7 +702,7 @@ def download_plan(current_user, brief_id):
 
         for plan in plans:
             location  = plan['location']
-            size_text = "Size: {}×{}".format(plan['height'], plan['width'])
+            size_text = "Size: {}×{}".format(int(plan['width']), int(plan['height']))
             
             text = [location, size_text]
             
@@ -891,13 +891,18 @@ def thirdPage(prs, texts, asset_image, map_image):
     for i, shape in enumerate(slide.shapes):
         if not shape.has_text_frame:
             continue
+        
         if i < len(texts):
             text_frame = shape.text_frame
             p = text_frame.paragraphs[0] 
             p.text = texts[i] + p.text  
-
+            p.font.size = Pt(15)
             text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
-            p.alignment = PP_ALIGN.CENTER
+        if i==2:
+            p = text_frame.paragraphs[0] 
+            p.alignment = PP_ALIGN.RIGHT
+        
+            
             
     shape = slide.shapes[2]
     # Check if the shape is a text box

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from app.utils.helpers import generate_jwt_token
 from app.utils.db_helper import query_db
-from bcrypt import hashpw, gensalt
+from bcrypt import hashpw, gensalt, checkpw
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -10,6 +10,8 @@ def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
+    
+  
 
     if email and password:
         user = authenticate_user(email, password)
@@ -33,4 +35,4 @@ def authenticate_user(email, password):
         return None
 
 def check_password(input_password, hashed_password):
-    return hashpw(input_password.encode('utf-8'), hashed_password.encode('utf-8')) == hashed_password.encode('utf-8')
+    return checkpw(input_password.encode('utf-8'), hashed_password.encode('utf-8'))

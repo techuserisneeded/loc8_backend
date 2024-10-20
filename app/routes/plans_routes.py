@@ -482,13 +482,12 @@ rank_area int(11) NOT NULL DEFAULT 0,
 rank_visibility_duration int(11) NOT NULL DEFAULT 0,
  rank_effective_impression int(11) NOT NULL DEFAULT 0, 
 rank_efficiency int(11) NOT NULL DEFAULT 0,
-rank_impressions int(11) NOT NULL DEFAULT 0
+rank_impressions int(11) NOT NULL DEFAULT 0,
+impression int(11) DEFAULT NULL
 );
 '''
     query_db(temp)
 
-    # Assuming 'billboards' is a list of dictionaries, each representing a row.
-# Adjust the field names to match your actual data structure.
 
     if billboards is not None:
         
@@ -506,7 +505,7 @@ rank_impressions int(11) NOT NULL DEFAULT 0
                 Rank_rear_saliency_citywise, efficiency, impression_id, effective_impression, zone_id, state_id ,
     city_id , average_speed, rank_saliency_front_citywise, rank_saliency_rear_citywise, 
     rank_saliency_net_citywise, rank_area,rank_display_cost_per_month, 
-    rank_visibility_duration, rank_effective_impression, rank_efficiency, rank_impressions 
+    rank_visibility_duration, rank_effective_impression, rank_efficiency, rank_impressions, impression 
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 
             %s, %s, %s, %s, %s, %s, %s, %s, %s, 
             %s, %s, %s, %s, %s, %s, %s, %s, %s,
@@ -514,7 +513,7 @@ rank_impressions int(11) NOT NULL DEFAULT 0
             %s, %s, %s, %s, %s, %s, %s, %s, %s,
             %s, %s, %s, %s, %s, %s, %s, %s, %s, 
             %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-            %s, %s);
+            %s, %s, %s);
             '''
             values = (
                 billboard['id'], billboard['video_id'], billboard['visibility_duration'], billboard['distance_to_center'],
@@ -535,7 +534,7 @@ rank_impressions int(11) NOT NULL DEFAULT 0
                 billboard['impression_id'], billboard['effective_impression'], billboard['zone_id'], billboard['state_id'], billboard['city_id'],
                 billboard['average_speed'], billboard['rank_saliency_front_citywise'], billboard['rank_saliency_rear_citywise'], 
     billboard['rank_saliency_net_citywise'], billboard['rank_area'],billboard['rank_display_cost_per_month'], 
-    billboard['rank_visibility_duration'], billboard['rank_effective_impression'], billboard['rank_efficiency'], billboard['rank_impressions'] 
+    billboard['rank_visibility_duration'], billboard['rank_effective_impression'], billboard['rank_efficiency'], billboard['rank_impressions'], billboard['impression'] 
             )
             query_db(temp, values)
         
