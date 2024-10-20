@@ -227,10 +227,15 @@ def upload(current_user):
 
     def progress_callback_s3(progress_percentage):
         if room_id in ABORT_REQUESTS_ROOMS:
-            os.remove(compressed_file_path)
+            try:
+                os.remove(compressed_file_path)
+            except:
+                pass
+
             socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
             ABORT_REQUESTS_ROOMS.remove(room_id)
-            return jsonify({"message": "Processing aborted"}), 400
+            raise Exception("Upload aborted by user")
+        
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
 
     vcd = video_processing(raw_file_path, processed_file_path, progress_callback, room_id=room_id)
@@ -265,7 +270,13 @@ def upload(current_user):
     s3_file_url = compressed_file_path
 
     if is_prod():
-        s3_file_url = upload_video_to_s3(compressed_file_path, filename, progress_callback=progress_callback_s3)
+        try:
+            s3_file_url = upload_video_to_s3(compressed_file_path, filename, progress_callback=progress_callback_s3)
+        except Exception as e:
+            if "aborted by user" in str(e).lower():
+                return jsonify({"message": "Video processing was aborted."}), 400
+            else:
+                return jsonify({"message": "Something went wrong while uploading the video."}), 500
 
     video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)

@@ -2,6 +2,8 @@ import boto3
 import os
 import math
 
+from app.constants.global_variables import ABORT_REQUESTS_ROOMS
+
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 region = os.getenv('AWS_REGION')
@@ -19,7 +21,9 @@ s3 = boto3.client(
 
 def upload_progress_callback(bytes_uploaded, file_size, progress_callback):
     percentage = math.ceil((bytes_uploaded / file_size) * 100)
-    progress_callback(percentage)
+
+    if progress_callback:
+        progress_callback(percentage)
 
 def upload_video_to_s3(file_name, object_name=None, bucket_name="loc8-tech-processed-videos", content_type='video/mp4', progress_callback=None):
     if object_name is None:

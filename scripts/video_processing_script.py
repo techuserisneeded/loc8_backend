@@ -217,6 +217,9 @@ def draw_bounding_boxes(File, output_file_path, progress_callback, room_id):
 
             if room_id in ABORT_REQUESTS_ROOMS:
                 output_video.release()
+                time.sleep(1)
+                if os.path.exists(temp_output_path):
+                    os.remove(temp_output_path)
                 break
 
             if tracker_id not in billboard_frames:
@@ -256,6 +259,9 @@ def draw_bounding_boxes(File, output_file_path, progress_callback, room_id):
 
         if room_id in ABORT_REQUESTS_ROOMS:
             output_video.release()
+            time.sleep(1)
+            if os.path.exists(temp_output_path):
+                os.remove(temp_output_path)
             return
 
         progress_percentage = int((frame_idx + 1) / total_frames * 100)
@@ -286,6 +292,8 @@ def draw_bounding_boxes(File, output_file_path, progress_callback, room_id):
             if room_id in ABORT_REQUESTS_ROOMS:
                 process.terminate()
                 time.sleep(1)
+                if os.path.exists(temp_output_path):
+                    os.remove(temp_output_path)
                 return
             time.sleep(1)
     except Exception as e:

@@ -8,6 +8,7 @@ import ffmpeg
 from app.utils.helpers import haversine_distance
 from app.constants.global_variables import ABORT_REQUESTS_ROOMS
 import time
+import subprocess
 
 api_key = os.getenv('GOOGLE_VISION_API_KEY')
 
@@ -158,26 +159,61 @@ def detected_text_to_data(response_text=""):
 #   output_stream = input_stream.output(output_file, crf=18)
 #   ffmpeg.run(output_stream)
 
-def compress_video(input_file, output_file, room_id):
-    input_stream = ffmpeg.input(input_file)
-    output_stream = input_stream.output(output_file, crf=18)
+# def compress_video(input_file, output_file, room_id):
+#     input_stream = ffmpeg.input(input_file)
+#     output_stream = input_stream.output(output_file, crf=18)
 
-    process = ffmpeg.run_async(output_stream, pipe_stderr=True)
+#     process = ffmpeg.run_async(output_stream, pipe_stderr=True, pipe_stdout=True)
+
+#     try:
+#         while process.poll() is None:
+#             print("polling")
+#             if room_id in ABORT_REQUESTS_ROOMS:
+#                 process.terminate() 
+#                 time.sleep(1)
+#                 print(f"Compression aborted for room {room_id}.")
+#                 return
+
+#             time.sleep(1)
+#         print(f"Video compression completed for room {room_id}.")
+#     except Exception as e:
+#         process.terminate()
+#         raise e
+
+def compress_video(input_file, output_file, room_id):
+    command = ["ffmpeg", "-y", "-i", input_file, "-crf", "18", output_file]
+
+    process = subprocess.Popen(
+        command
+    )
 
     try:
-        while process.poll() is None:
-            if room_id in ABORT_REQUESTS_ROOMS:
-                process.terminate() 
-                time.sleep(1)
-                print(f"Compression aborted for room {room_id}.")
-                return
+        while True:
+    
+            retcode = process.poll()
+            
+            if retcode is None: 
+                
+                if room_id in ABORT_REQUESTS_ROOMS:
+                    process.terminate()  # Terminate the process
+                    time.sleep(1)
+                    print(f"Compression aborted for room {room_id}.")
+                    return
 
-            time.sleep(1)
-        print(f"Video compression completed for room {room_id}.")
+                time.sleep(1)
+
+            else: 
+                if retcode == 0:
+                    print(f"Video compression completed for room {room_id}.")
+                else:
+                    stderr_output = process.stderr.read().decode()
+                    raise Exception(f"Compression failed: {stderr_output}")
+                break
+
     except Exception as e:
         process.terminate()
         raise e
-
+    
 def calculate_avg_speed_stretched(video_coordinates=[]):
 
     stretched_in_meters = 0.0
