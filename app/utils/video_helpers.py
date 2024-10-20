@@ -6,6 +6,8 @@ import os
 import math
 import ffmpeg
 from app.utils.helpers import haversine_distance
+from app.constants.global_variables import ABORT_REQUESTS_ROOMS
+import time
 
 api_key = os.getenv('GOOGLE_VISION_API_KEY')
 
@@ -151,10 +153,30 @@ def detected_text_to_data(response_text=""):
     else:
         return None
 
-def compress_video(input_file, output_file):
-  input_stream = ffmpeg.input(input_file)
-  output_stream = input_stream.output(output_file, crf=18)
-  ffmpeg.run(output_stream)
+# def compress_video(input_file, output_file, room_id):
+#   input_stream = ffmpeg.input(input_file)
+#   output_stream = input_stream.output(output_file, crf=18)
+#   ffmpeg.run(output_stream)
+
+def compress_video(input_file, output_file, room_id):
+    input_stream = ffmpeg.input(input_file)
+    output_stream = input_stream.output(output_file, crf=18)
+
+    process = ffmpeg.run_async(output_stream, pipe_stderr=True)
+
+    try:
+        while process.poll() is None:
+            if room_id in ABORT_REQUESTS_ROOMS:
+                process.terminate() 
+                time.sleep(1)
+                print(f"Compression aborted for room {room_id}.")
+                return
+
+            time.sleep(1)
+        print(f"Video compression completed for room {room_id}.")
+    except Exception as e:
+        process.terminate()
+        raise e
 
 def calculate_avg_speed_stretched(video_coordinates=[]):
 

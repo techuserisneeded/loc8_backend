@@ -9,10 +9,10 @@ from app.utils.db_helper import query_db
 from app.utils.helpers import generate_uuid, is_prod, generate_defined_length_uuid
 from app.constants.roles import roles
 from app import socketio
+from app.constants.global_variables import ABORT_REQUESTS_ROOMS
 
 from app.utils.video_helpers import get_coordinates_from_video, compress_video, calculate_avg_speed_stretched
 from app.libs.boto3 import upload_video_to_s3, get_presigned_url, delete_obj
-
 
 video_bp = Blueprint('videos', __name__)
 
@@ -166,7 +166,7 @@ def upload(current_user):
     state_id = request.form['state_id']
     city_id = request.form['city_id']
     room_id = request.form['room_id']
-
+        
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
 
@@ -183,21 +183,82 @@ def upload(current_user):
     processed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, processed_filename))
     compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
 
-    video_file.save(raw_file_path)
+    chunk_size = 1024 * 1024
 
+    f = open(raw_file_path, 'wb')
+
+    while True:
+        if room_id in ABORT_REQUESTS_ROOMS:
+            f.close()
+            os.remove(raw_file_path)
+            ABORT_REQUESTS_ROOMS.remove(room_id)
+            return jsonify({"message": "Upload aborted during file save"}), 400
+        
+        chunk = video_file.stream.read(chunk_size)
+        
+        if not chunk:
+            break
+    
+        f.write(chunk)
+
+    f.close()
+    
+    def is_present(video_name):
+        video_name = video_name[:-4]
+        video_name = video_name + "_%"
+        query = '''SELECT *
+        FROM videofiles
+        WHERE filename LIKE %s
+        '''
+        videonames = query_db(query, (video_name,))
+        
+    is_present(video_file.filename)
+        
     def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
+        print(ABORT_REQUESTS_ROOMS)
+        if room_id in ABORT_REQUESTS_ROOMS:
+            os.remove(raw_file_path)
+            os.remove(processed_file_path)
+            socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
+            ABORT_REQUESTS_ROOMS.remove(room_id)
+            return jsonify({"message": "Processing aborted"}), 400
+        
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
 
     def progress_callback_s3(progress_percentage):
+        if room_id in ABORT_REQUESTS_ROOMS:
+            os.remove(compressed_file_path)
+            socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
+            ABORT_REQUESTS_ROOMS.remove(room_id)
+            return jsonify({"message": "Processing aborted"}), 400
         socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
 
-    vcd = video_processing(raw_file_path, processed_file_path, progress_callback)
-    vcd2 = str(vcd)
-    vcd3 = vcd2[0:2]
+    vcd = video_processing(raw_file_path, processed_file_path, progress_callback, room_id=room_id)
+
+    if room_id in ABORT_REQUESTS_ROOMS:
+        os.remove(raw_file_path)  
+
+        if os.path.exists(processed_file_path):
+            os.remove(processed_file_path)
+
+        ABORT_REQUESTS_ROOMS.remove(room_id)
+        return jsonify({"message": "Processing aborted"}), 400
 
     progress_callback(-1, "compressing...")
 
-    compress_video(processed_file_path, compressed_file_path)
+    compress_video(processed_file_path, compressed_file_path, room_id)
+
+    if room_id in ABORT_REQUESTS_ROOMS:
+        os.remove(raw_file_path)  
+
+        if os.path.exists(processed_file_path):
+            os.remove(processed_file_path)
+
+        if os.path.exists(compressed_file_path):
+            os.remove(compressed_file_path)
+
+        ABORT_REQUESTS_ROOMS.remove(room_id)
+        return jsonify({"message": "Processing aborted"}), 400
 
     progress_callback(100, "compressing...")
 
@@ -265,6 +326,19 @@ def upload(current_user):
 
     return jsonify({"billboards":  billboards, "video_details": video_details}), 200
     # return jsonify({"billboards":  "", "video_details": ""}), 200
+
+
+@video_bp.route('/upload/abort', methods=['POST'])
+@token_required
+def abort_video(current_user):
+    room_id = request.form['room_id']
+
+    ABORT_REQUESTS_ROOMS.append(room_id)
+
+    socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
+    
+    return jsonify({"message": "Video upload aborted"}), 200
+
 
 
 @video_bp.route('/output/<video_id>', methods=['GET',])

@@ -12,6 +12,7 @@ import numpy as np
 import locale
 import subprocess
 import uuid
+import time
 
 
 def getpreferredencoding(do_setlocale = True):
@@ -37,6 +38,8 @@ from supervision.tools.detections import Detections, BoxAnnotator
 from supervision.tools.line_counter import LineCounter, LineCounterAnnotator
 from typing import List
 from ultralytics import YOLO
+
+from app.constants.global_variables import ABORT_REQUESTS_ROOMS
 
 
 @dataclass(frozen=True)
@@ -171,7 +174,7 @@ def write_text(image, label, pos = (0,0),font=cv2.FONT_ITALIC, font_scale=1.1, t
     return text_size
 
 y_thres = 70
-def draw_bounding_boxes(File, output_file_path, progress_callback):
+def draw_bounding_boxes(File, output_file_path, progress_callback, room_id):
 
     TARGET_VIDEO_PATH = output_file_path
 
@@ -212,6 +215,10 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
         for box, tracker_id, confidence in zip(detections.xyxy, detections.tracker_id, detections.confidence):
 
+            if room_id in ABORT_REQUESTS_ROOMS:
+                output_video.release()
+                break
+
             if tracker_id not in billboard_frames:
                 billboard_frames[tracker_id] = {'start_frame': frame_idx, 'end_frame': None, 'center': None, 'areas': [], 'confidences': []}
                 billboard_regions[tracker_id] = {"Central":0,"Near P":0,"Mid P":0,"Far P":0, "Central Dist" : 0, "Near P Dist" : 0, "Mid P Dist":0, "Far P Dist":0}
@@ -247,6 +254,10 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
         output_video.write(frame)
 
+        if room_id in ABORT_REQUESTS_ROOMS:
+            output_video.release()
+            return
+
         progress_percentage = int((frame_idx + 1) / total_frames * 100)
         progress_callback(progress_percentage)
 
@@ -259,20 +270,41 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
 
     progress_callback(-1, "re-encoding the video file..")
 
+    if room_id in ABORT_REQUESTS_ROOMS:
+        return
+
     # re writing video to H.264 codec
     ffmpeg_command = [
         'ffmpeg', '-i', temp_output_path, '-vcodec', 'libx264', '-crf', '23', '-preset', 'medium',
         '-pix_fmt', 'yuv420p', TARGET_VIDEO_PATH
     ]
 
-    subprocess.run(ffmpeg_command, check=True)
+    process = subprocess.Popen(ffmpeg_command)
+
+    try:
+        while process.poll() is None:
+            if room_id in ABORT_REQUESTS_ROOMS:
+                process.terminate()
+                time.sleep(1)
+                return
+            time.sleep(1)
+    except Exception as e:
+        process.terminate()
+        raise e
 
     os.remove(temp_output_path)
+
+    if room_id in ABORT_REQUESTS_ROOMS:
+        return
 
     visibility_durations = {}
     average_areas = {}
     average_confidence = {}
     for tracker_id, frames in billboard_frames.items():
+
+        if room_id in ABORT_REQUESTS_ROOMS:
+            return
+
         start_frame = frames['start_frame']
         end_frame = frames['end_frame']
         center = frames['center']
@@ -322,8 +354,8 @@ def draw_bounding_boxes(File, output_file_path, progress_callback):
     return visibility_durations
 
 
-def video_processing(dest, output_file_path=f"./instance/BillBoardDetectionandCounting.mp4", progress_callback=None):
-    vcd =draw_bounding_boxes(dest, output_file_path, progress_callback)
+def video_processing(dest, output_file_path=f"./instance/BillBoardDetectionandCounting.mp4", progress_callback=None, room_id=""):
+    vcd =draw_bounding_boxes(dest, output_file_path, progress_callback, room_id)
     print(vcd)
     return vcd
 
