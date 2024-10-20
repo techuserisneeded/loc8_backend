@@ -166,6 +166,7 @@ def upload(current_user):
     state_id = request.form['state_id']
     city_id = request.form['city_id']
     room_id = request.form['room_id']
+    overwrite = request.form['overwrite']
         
     if video_file is None or video_file.filename == "":
         return jsonify({"error": "no file"})
@@ -182,6 +183,25 @@ def upload(current_user):
     raw_file_path = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, raw_filename))
     processed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, processed_filename))
     compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
+
+    video_name_like = filename_wo_ext + "_%"
+    
+    video_id = None
+    is_video_present = False
+
+    query = '''SELECT *
+        FROM videofiles
+        WHERE filename LIKE %s
+        AND city_id=%s
+    '''
+    videos_in_city = query_db(query, (video_name_like, city_id))
+
+    if len(videos_in_city) > 0:
+        video_id = videos_in_city[0]["video_id"]
+        is_video_present = True
+        
+    if not overwrite and is_video_present:
+       return jsonify({ 'message': 'filename for the city already exists.' }), 409
 
     chunk_size = 1024 * 1024
 
@@ -202,20 +222,9 @@ def upload(current_user):
         f.write(chunk)
 
     f.close()
-    
-    def is_present(video_name):
-        video_name = video_name[:-4]
-        video_name = video_name + "_%"
-        query = '''SELECT *
-        FROM videofiles
-        WHERE filename LIKE %s
-        '''
-        videonames = query_db(query, (video_name,))
-        
-    is_present(video_file.filename)
         
     def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
-        print(ABORT_REQUESTS_ROOMS)
+
         if room_id in ABORT_REQUESTS_ROOMS:
             os.remove(raw_file_path)
             os.remove(processed_file_path)
@@ -277,6 +286,35 @@ def upload(current_user):
                 return jsonify({"message": "Video processing was aborted."}), 400
             else:
                 return jsonify({"message": "Something went wrong while uploading the video."}), 500
+            
+    query_db("START TRANSACTION")
+
+    if is_video_present:
+
+        #delete co-ordinates
+        q = """
+            DELETE FROM video_coordinates WHERE video_id=%s
+        """
+        v = (video_id,)
+
+        query_db(q, v)
+
+        #delete billboards data
+        q = """
+            DELETE FROM billboards WHERE video_id=%s
+        """
+        v = (video_id,)
+
+        query_db(q, v)
+
+        #delete video data
+        q = """
+            DELETE FROM videofiles WHERE video_id=%s
+        """
+        v = (video_id,)
+
+        query_db(q, v)
+
 
     video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
     insert_billboard_data(video_id, current_user['id'], vcd)
@@ -291,7 +329,7 @@ def upload(current_user):
         VALUES (%s, %s, %s, %s)
     """
     for coords in coordinate_tuples:
-        query_db(coordinates_q, (video_id, coords[0], coords[1], coords[2]), False, True)
+        query_db(coordinates_q, (video_id, coords[0], coords[1], coords[2]))
 
     coordinates_q = """
         SELECT * FROM video_coordinates
@@ -320,8 +358,9 @@ def upload(current_user):
         video_id
     )
 
-    query_db(query, args, True, True)
+    query_db(query, args)
 
+    query_db("COMMIT")
 
     bill_q = "SELECT * FROM billboards WHERE video_id = %s";
     billboards = query_db(bill_q, (video_id,))
@@ -646,7 +685,7 @@ def insert_video_data(output_file_path, filename, zone_id, state_id, city_id, cr
     """
     video_id = generate_uuid()
     video_args = (video_id, filename, output_file_path, zone_id, state_id, city_id, created_by_user_id)
-    query_db(video_query, video_args, False, True)
+    query_db(video_query, video_args) # make sure to commit, here we are not committing
     return video_id
 
 def insert_billboard_data(video_id, user_id, billboard_data):
@@ -688,6 +727,6 @@ def insert_billboard_data(video_id, user_id, billboard_data):
             tracker_id,
             user_id
         )
-        query_db(billboard_query, billboard_args, False, True)
+        query_db(billboard_query, billboard_args) # make sure to commit, here we are not committing
 
 
