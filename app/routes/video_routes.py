@@ -161,221 +161,244 @@ def get_all_videos(current_user):
 @video_bp.route('/upload', methods=['POST',])
 @token_required
 def upload(current_user):
-    video_file = request.files['video']
-    zone_id = request.form['zone_id']
-    state_id = request.form['state_id']
-    city_id = request.form['city_id']
-    room_id = request.form['room_id']
-    overwrite = request.form['overwrite']
+
+    try:
+        raw_file_path = None
+        processed_file_path = None
+        compressed_file_path = None
+
+        video_file = request.files['video']
+        zone_id = request.form['zone_id']
+        state_id = request.form['state_id']
+        city_id = request.form['city_id']
+        room_id = request.form['room_id']
+        overwrite = int(request.form['overwrite']) == 1
+
+        if video_file is None or video_file.filename == "":
+            return jsonify({"error": "no file"})
+
+        unique_id = generate_defined_length_uuid(6) 
+
+        original_filename = secure_filename(video_file.filename)
+        filename_wo_ext, file_extension = os.path.splitext(original_filename)
+
+        raw_filename = secure_filename(generate_uuid() + video_file.filename)
+        filename = secure_filename(f"{filename_wo_ext}_{unique_id}{file_extension}")
+        processed_filename = secure_filename("temp_" + filename)
+
+        raw_file_path = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, raw_filename))
+        processed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, processed_filename))
+        compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
+
+        video_name_like = filename_wo_ext + "_%"
         
-    if video_file is None or video_file.filename == "":
-        return jsonify({"error": "no file"})
+        video_id = None
+        is_video_present = False
 
-    unique_id = generate_defined_length_uuid(6) 
+        query = '''SELECT *
+            FROM videofiles
+            WHERE filename LIKE %s
+            AND city_id=%s
+        '''
+        videos_in_city = query_db(query, (video_name_like, city_id))
 
-    original_filename = secure_filename(video_file.filename)
-    filename_wo_ext, file_extension = os.path.splitext(original_filename)
+        if len(videos_in_city) > 0:
+            is_video_present = True
 
-    raw_filename = secure_filename(generate_uuid() + video_file.filename)
-    filename = secure_filename(f"{filename_wo_ext}_{unique_id}{file_extension}")
-    processed_filename = secure_filename("temp_" + filename)
+        if not overwrite and is_video_present:
+            return jsonify({ 'message': 'filename for the city already exists.' }), 409
 
-    raw_file_path = os.path.abspath(os.path.join(AppConfig.UPLOAD_FOLDER, raw_filename))
-    processed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, processed_filename))
-    compressed_file_path = os.path.abspath(os.path.join(TARGET_VIDEO_PATH, filename))
+        chunk_size = 1024 * 1024
 
-    video_name_like = filename_wo_ext + "_%"
-    
-    video_id = None
-    is_video_present = False
+        f = open(raw_file_path, 'wb')
 
-    query = '''SELECT *
-        FROM videofiles
-        WHERE filename LIKE %s
-        AND city_id=%s
-    '''
-    videos_in_city = query_db(query, (video_name_like, city_id))
-
-    if len(videos_in_city) > 0:
-        video_id = videos_in_city[0]["video_id"]
-        is_video_present = True
+        while True:
+            if room_id in ABORT_REQUESTS_ROOMS:
+                f.close()
+                os.remove(raw_file_path)
+                ABORT_REQUESTS_ROOMS.remove(room_id)
+                return jsonify({"message": "Upload aborted during file save"}), 400
+            
+            chunk = video_file.stream.read(chunk_size)
+            
+            if not chunk:
+                break
         
-    if not overwrite and is_video_present:
-       return jsonify({ 'message': 'filename for the city already exists.' }), 409
+            f.write(chunk)
 
-    chunk_size = 1024 * 1024
+        f.close()
+            
+        def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
 
-    f = open(raw_file_path, 'wb')
+            if room_id in ABORT_REQUESTS_ROOMS:
+                os.remove(raw_file_path)
+                os.remove(processed_file_path)
+                socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
+                ABORT_REQUESTS_ROOMS.remove(room_id)
+                return jsonify({"message": "Processing aborted"}), 400
+            
+            socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
 
-    while True:
+        def progress_callback_s3(progress_percentage):
+            if room_id in ABORT_REQUESTS_ROOMS:
+                try:
+                    os.remove(compressed_file_path)
+                except:
+                    pass
+
+                socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
+                ABORT_REQUESTS_ROOMS.remove(room_id)
+                raise Exception("Upload aborted by user")
+            
+            socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
+
+        vcd = video_processing(raw_file_path, processed_file_path, progress_callback, room_id=room_id)
+
         if room_id in ABORT_REQUESTS_ROOMS:
-            f.close()
-            os.remove(raw_file_path)
-            ABORT_REQUESTS_ROOMS.remove(room_id)
-            return jsonify({"message": "Upload aborted during file save"}), 400
-        
-        chunk = video_file.stream.read(chunk_size)
-        
-        if not chunk:
-            break
-    
-        f.write(chunk)
+            os.remove(raw_file_path)  
 
-    f.close()
-        
-    def progress_callback(progress_percentage, message="OOH Asset Detection & Feature Extraction in progress"):
+            if os.path.exists(processed_file_path):
+                os.remove(processed_file_path)
 
-        if room_id in ABORT_REQUESTS_ROOMS:
-            os.remove(raw_file_path)
-            os.remove(processed_file_path)
-            socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
             ABORT_REQUESTS_ROOMS.remove(room_id)
             return jsonify({"message": "Processing aborted"}), 400
-        
-        socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': message}, room=room_id)
 
-    def progress_callback_s3(progress_percentage):
+        progress_callback(-1, "compressing...")
+
+        compress_video(processed_file_path, compressed_file_path, room_id)
+
         if room_id in ABORT_REQUESTS_ROOMS:
-            try:
+            os.remove(raw_file_path)  
+
+            if os.path.exists(processed_file_path):
+                os.remove(processed_file_path)
+
+            if os.path.exists(compressed_file_path):
                 os.remove(compressed_file_path)
-            except:
-                pass
 
-            socketio.emit('processing_aborted', {'message': 'Video processing aborted'}, room=room_id)
             ABORT_REQUESTS_ROOMS.remove(room_id)
-            raise Exception("Upload aborted by user")
-        
-        socketio.emit('processing_progress', {'percentage': progress_percentage, 'message': 'saving...'}, room=room_id)
+            return jsonify({"message": "Processing aborted"}), 400
 
-    vcd = video_processing(raw_file_path, processed_file_path, progress_callback, room_id=room_id)
+        progress_callback(100, "compressing...")
 
-    if room_id in ABORT_REQUESTS_ROOMS:
-        os.remove(raw_file_path)  
+        s3_file_url = compressed_file_path
 
-        if os.path.exists(processed_file_path):
-            os.remove(processed_file_path)
+        if is_prod():
+            try:
+                s3_file_url = upload_video_to_s3(compressed_file_path, filename, progress_callback=progress_callback_s3)
+            except Exception as e:
+                if "aborted by user" in str(e).lower():
+                    return jsonify({"message": "Video processing was aborted."}), 400
+                else:
+                    return jsonify({"message": "Something went wrong while uploading the video."}), 500
+                
+        query_db("START TRANSACTION")
 
-        ABORT_REQUESTS_ROOMS.remove(room_id)
-        return jsonify({"message": "Processing aborted"}), 400
+        if is_video_present:
 
-    progress_callback(-1, "compressing...")
+            for existing_video in videos_in_city:
+                ex_video_id = existing_video['video_id']
 
-    compress_video(processed_file_path, compressed_file_path, room_id)
+                #delete co-ordinates
+                q = """
+                    DELETE FROM video_coordinates WHERE video_id=%s
+                """
+                v = (ex_video_id,)
 
-    if room_id in ABORT_REQUESTS_ROOMS:
-        os.remove(raw_file_path)  
+                query_db(q, v)
 
-        if os.path.exists(processed_file_path):
-            os.remove(processed_file_path)
+                #delete billboards data
+                q = """
+                    DELETE FROM billboards WHERE video_id=%s
+                """
+                v = (ex_video_id,)
 
-        if os.path.exists(compressed_file_path):
+                query_db(q, v)
+
+                #delete video data
+                q = """
+                    DELETE FROM videofiles WHERE video_id=%s
+                """
+                v = (ex_video_id,)
+
+                query_db(q, v)
+
+
+        video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
+        insert_billboard_data(video_id, current_user['id'], vcd)
+
+        # video_id = insert_video_data(compressed_file_path, comp_filename, zone_id, state_id, city_id, current_user['id'])
+        # insert_billboard_data(video_id, current_user['id'], vcd)
+
+        coordinate_tuples = get_coordinates_from_video(raw_file_path)
+
+        coordinates_q = """
+            INSERT INTO `video_coordinates`(`video_id`, `speed`, `latitude`, `longitude`) 
+            VALUES (%s, %s, %s, %s)
+        """
+        for coords in coordinate_tuples:
+            query_db(coordinates_q, (video_id, coords[0], coords[1], coords[2]))
+
+        coordinates_q = """
+            SELECT * FROM video_coordinates
+            WHERE video_id=%s
+        """
+
+        video_coordinates = query_db(coordinates_q, (video_id,))
+
+        if not video_coordinates:
+            video_coordinates = []
+
+        avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
+
+        query = """
+            UPDATE videofiles
+            SET
+                average_speed=%s, 
+                length_of_stretch=%s
+            WHERE
+                video_id=%s
+        """
+
+        args = (
+            avg_speed_km,
+            stretched_in_meters,
+            video_id
+        )
+
+        query_db(query, args)
+
+        query_db("COMMIT")
+
+        bill_q = "SELECT * FROM billboards WHERE video_id = %s";
+        billboards = query_db(bill_q, (video_id,))
+    
+        video_q = "SELECT * FROM videofiles WHERE video_id = %s";
+        video_details = query_db(video_q, (video_id,), True)
+
+        os.remove(raw_file_path)
+        os.remove(processed_file_path)
+
+        if is_prod():
             os.remove(compressed_file_path)
 
-        ABORT_REQUESTS_ROOMS.remove(room_id)
-        return jsonify({"message": "Processing aborted"}), 400
+        return jsonify({"billboards":  billboards, "video_details": video_details}), 200
+        # return jsonify({"billboards":  "", "video_details": ""}), 200
 
-    progress_callback(100, "compressing...")
+    except Exception as e:
 
-    s3_file_url = compressed_file_path
+        query_db("ROLLBACK")
 
-    if is_prod():
-        try:
-            s3_file_url = upload_video_to_s3(compressed_file_path, filename, progress_callback=progress_callback_s3)
-        except Exception as e:
-            if "aborted by user" in str(e).lower():
-                return jsonify({"message": "Video processing was aborted."}), 400
-            else:
-                return jsonify({"message": "Something went wrong while uploading the video."}), 500
-            
-    query_db("START TRANSACTION")
+        if raw_file_path and os.path.exists(raw_file_path):
+            os.remove(raw_file_path)
 
-    if is_video_present:
+        if processed_file_path and os.path.exists(processed_file_path):
+            os.remove(processed_file_path)
 
-        #delete co-ordinates
-        q = """
-            DELETE FROM video_coordinates WHERE video_id=%s
-        """
-        v = (video_id,)
-
-        query_db(q, v)
-
-        #delete billboards data
-        q = """
-            DELETE FROM billboards WHERE video_id=%s
-        """
-        v = (video_id,)
-
-        query_db(q, v)
-
-        #delete video data
-        q = """
-            DELETE FROM videofiles WHERE video_id=%s
-        """
-        v = (video_id,)
-
-        query_db(q, v)
-
-
-    video_id = insert_video_data(s3_file_url, filename, zone_id, state_id, city_id, current_user['id'])
-    insert_billboard_data(video_id, current_user['id'], vcd)
-
-    # video_id = insert_video_data(compressed_file_path, comp_filename, zone_id, state_id, city_id, current_user['id'])
-    # insert_billboard_data(video_id, current_user['id'], vcd)
-
-    coordinate_tuples = get_coordinates_from_video(raw_file_path)
-
-    coordinates_q = """
-        INSERT INTO `video_coordinates`(`video_id`, `speed`, `latitude`, `longitude`) 
-        VALUES (%s, %s, %s, %s)
-    """
-    for coords in coordinate_tuples:
-        query_db(coordinates_q, (video_id, coords[0], coords[1], coords[2]))
-
-    coordinates_q = """
-        SELECT * FROM video_coordinates
-        WHERE video_id=%s
-    """
-
-    video_coordinates = query_db(coordinates_q, (video_id,))
-
-    if not video_coordinates:
-        video_coordinates = []
-
-    avg_speed_km, stretched_in_meters = calculate_avg_speed_stretched(video_coordinates)
-
-    query = """
-        UPDATE videofiles
-        SET
-            average_speed=%s, 
-            length_of_stretch=%s
-        WHERE
-            video_id=%s
-    """
-
-    args = (
-        avg_speed_km,
-        stretched_in_meters,
-        video_id
-    )
-
-    query_db(query, args)
-
-    query_db("COMMIT")
-
-    bill_q = "SELECT * FROM billboards WHERE video_id = %s";
-    billboards = query_db(bill_q, (video_id,))
-   
-    video_q = "SELECT * FROM videofiles WHERE video_id = %s";
-    video_details = query_db(video_q, (video_id,), True)
-
-    os.remove(raw_file_path)
-    os.remove(processed_file_path)
-
-    if is_prod():
-        os.remove(compressed_file_path)
-
-    return jsonify({"billboards":  billboards, "video_details": video_details}), 200
-    # return jsonify({"billboards":  "", "video_details": ""}), 200
+        if compressed_file_path and os.path.exists(compressed_file_path):
+            os.remove(compressed_file_path)
+        
+        return jsonify({"message": "something went wrong!"}), 500
 
 
 @video_bp.route('/upload/abort', methods=['POST'])
